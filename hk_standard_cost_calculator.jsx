@@ -1,0 +1,814 @@
+import { useState, useCallback } from "react";
+
+// ─── COST CONSTANTS (COSTS LOG sheet, 04/2026) ───────────────────────────────
+const C = {
+  EUR_TO_HKD: 9.1437,
+
+  FOB: {
+    DRY:    { NORD: 2000,   CENTRO: 0,      SUD: 1108.55 },
+    FRESH:  { NORD: 3500,   CENTRO: 3500,   SUD: 0       },
+    FROZEN: { NORD: 4000,   CENTRO: 0,      SUD: 0       },
+  },
+
+  LIC_PER_CONTAINER:  863.9828515808698,
+  VGM_PER_CONTAINER:  100,
+  HC_PER_CONTAINER:   80,
+  PALLET_COST:        30,
+
+  // MTO – cross-docking (In+Stock+Out) €/plt
+  MTO_PER_PLT: { DRY: 8.16, FRESH: 10.2, FROZEN: 12.24 },
+
+  // MTS – Unifreddo warehouse €/plt (Deposito) + €/plt (Inbound) + €/collo (Picking)
+  MTS: {
+    DEPOSITO: { DRY: 14.4228, FRESH: 16.4832, FROZEN: 24.7248 },
+    INBOUND:  { DRY: 2.5755,  FRESH: 3.6057,  FROZEN: 3.6057  },
+    PICKING:  { DRY: 0.303,   FRESH: 0.3434,  FROZEN: 0.3535  },
+  },
+
+  DEFAULT_PLT_PER_CONTAINER: { DRY: 25, FRESH: 23, FROZEN: 23 },
+  IC_RATE: 0.01,  // Intercompany surcharge 1%
+};
+
+// ─── UOM CONFIG ──────────────────────────────────────────────────────────────
+const UOM_CONFIG = {
+  PCS: {
+    label:      "PCS — Pezzo",
+    icon:       "🔢",
+    priceLabel: "Prezzo acquisto per PEZZO (€)",
+    showQty:    true,
+    qtyLabel:   "Pezzi per cartone",
+    qtyPlaceholder: "es. 12",
+    qtySuffix:  "pz",
+    divisor:    f => parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet),
+    hint:       f => f.qtyPerBox && f.boxPerPallet
+      ? `→ ${Math.round(parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet))} pz / pallet`
+      : "",
+    pickingDivisor: f => parseFloat(f.qtyPerBox),  // picking per collo = per box
+  },
+  BOX: {
+    label:      "BOX — Cartone",
+    icon:       "📦",
+    priceLabel: "Prezzo acquisto per CARTONE/BOX (€)",
+    showQty:    false,
+    divisor:    f => parseFloat(f.boxPerPallet),
+    hint:       f => f.boxPerPallet ? `→ ${parseFloat(f.boxPerPallet)} box / pallet` : "",
+    pickingDivisor: _ => 1,  // il BOX è il collo
+  },
+  KG: {
+    label:      "KG — Chilogrammo",
+    icon:       "⚖️",
+    priceLabel: "Prezzo acquisto per KG (€)",
+    showQty:    true,
+    qtyLabel:   "Kg netti per cartone",
+    qtyPlaceholder: "es. 10",
+    qtySuffix:  "kg",
+    divisor:    f => parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet),
+    hint:       f => f.qtyPerBox && f.boxPerPallet
+      ? `→ ${Math.round(parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet))} kg / pallet`
+      : "",
+    pickingDivisor: f => parseFloat(f.qtyPerBox),
+  },
+};
+
+// ─── UBICAZIONE / WAREHOUSE CONFIG ───────────────────────────────────────────
+const UBIC_CONFIG = {
+  MTO: {
+    label:    "MTO — Cross-docking",
+    icon:     "🔄",
+    sublabel: "Merce in transito a Unifreddo (standard)",
+    desc:     "Costo In+Stock+Out applicato per pallet",
+    color:    "#4A8C9B",
+  },
+  FOR: {
+    label:    "FOR — Franco fornitore",
+    icon:     "🚛",
+    sublabel: "Fornitore gestisce il trasporto, nessun magazzino",
+    desc:     "Nessun costo di handling aggiunto (Step 2 = Step 1)",
+    color:    "#6A9B4A",
+  },
+  MTS: {
+    label:    "MTS — Magazzino Unifreddo",
+    icon:     "🏭",
+    sublabel: "Stoccato a Unifreddo (Made to Stock)",
+    desc:     "Costi Deposito + Inbound + Picking applicati",
+    color:    "#C4873B",
+  },
+};
+
+// ─── PRICE TYPE ──────────────────────────────────────────────────────────────
+const PRICE_TYPE_CONFIG = {
+  DAP_FOR: {
+    label:    "DAP / FOR",
+    icon:     "📋",
+    sublabel: "Prezzo già incluso trasporto a Unifreddo",
+    desc:     "Delivered at Place o Franco Destinazione — il fornitore porta la merce. Usa questo prezzo così com'è.",
+    color:    "#4A9B6C",
+  },
+  FCA: {
+    label:    "FCA",
+    icon:     "🏗️",
+    sublabel: "Free Carrier — trasporto Unifreddo a parte",
+    desc:     "Il prezzo non include il trasporto verso Unifreddo. Aggiungere il costo carriage prima di inserirlo (vedi Work_tab).",
+    color:    "#9B7A4A",
+  },
+  MTS_PRICE: {
+    label:    "MTS (con IC)",
+    icon:     "🔗",
+    sublabel: "Prezzo intercompany Unifreddo → filiale",
+    desc:     "Prezzo che include già la maggiorazione IC (1%). Tipico per prodotti a stock.",
+    color:    "#7B4AC4",
+  },
+};
+
+// ─── TEMPERATURE OPTIONS ─────────────────────────────────────────────────────
+const TEMP_OPTIONS = [
+  { value: "DRY",    label: "🌾 Dry (Secco)",           color: "#C4873B" },
+  { value: "FRESH",  label: "❄️ Fresh (+15°C / +4°C)",   color: "#3B8DC4" },
+  { value: "FROZEN", label: "🧊 Frozen (−18°C)",          color: "#7B3BC4" },
+];
+
+const AREA_OPTIONS = [
+  { value: "NORD",   label: "Nord" },
+  { value: "CENTRO", label: "Centro" },
+  { value: "SUD",    label: "Sud" },
+];
+
+const TABS = [
+  { key: "FOOD",  label: "🍝 Food",         desc: "Alimentari, formaggi, pasta…" },
+  { key: "WINE",  label: "🍷 Beverage",      desc: "Vino, spumante, soft drinks…" },
+  { key: "MEAT",  label: "🥩 Meat / Fish",   desc: "Carne, pesce, salumi…" },
+];
+
+// ─── CALCULATION ─────────────────────────────────────────────────────────────
+function calcStdCost({ purchaseEur, uom, qtyPerBox, boxPerPallet,
+  temperature, area, pltPerContainer, hasCert, hasAlcTax, alcTaxPerUnit, ubicazione, eurToHkd }) {
+
+  const rate = eurToHkd || C.EUR_TO_HKD;
+
+  const uomCfg     = UOM_CONFIG[uom];
+  const unitsPerPlt = uomCfg.divisor({ qtyPerBox, boxPerPallet });
+  const totalUnits  = unitsPerPlt * pltPerContainer;
+  if (!totalUnits || !purchaseEur) return null;
+
+  const fobTotal   = C.FOB[temperature]?.[area] ?? 0;
+  const fobPerUnit = fobTotal / totalUnits;
+  const licPerUnit = C.LIC_PER_CONTAINER / totalUnits;
+  const vgmPerUnit = C.VGM_PER_CONTAINER / totalUnits;
+  const hcPerUnit  = hasCert ? C.HC_PER_CONTAINER / totalUnits : 0;
+  const palletPerUnit = C.PALLET_COST / unitsPerPlt;
+  const alcPerUnit = hasAlcTax ? (parseFloat(alcTaxPerUnit) || 0) : 0;
+
+  const step1Eur = purchaseEur + fobPerUnit + licPerUnit + vgmPerUnit
+                 + hcPerUnit + palletPerUnit + alcPerUnit;
+  const step1Hkd = step1Eur * rate;
+
+  // ── Warehouse step (Step 2 - Step 1) ──────────────────────────────────────
+  let warehousePerUnit = 0;
+  let warehouseDetail = null;
+
+  if (ubicazione === "MTO") {
+    warehousePerUnit = (C.MTO_PER_PLT[temperature] ?? 8.16) / unitsPerPlt;
+    warehouseDetail = { type: "MTO", total: warehousePerUnit };
+
+  } else if (ubicazione === "MTS") {
+    const dep     = (C.MTS.DEPOSITO[temperature] ?? 14.4228) / unitsPerPlt;
+    const inbound = (C.MTS.INBOUND[temperature]  ?? 2.5755)  / unitsPerPlt;
+    const pickDiv = uomCfg.pickingDivisor({ qtyPerBox, boxPerPallet });
+    const picking = (C.MTS.PICKING[temperature]  ?? 0.303)   / pickDiv;
+    warehousePerUnit = dep + inbound + picking;
+    warehouseDetail = { type: "MTS", dep, inbound, picking, total: warehousePerUnit };
+
+  } else {
+    // FOR: no warehouse cost
+    warehouseDetail = { type: "FOR", total: 0 };
+  }
+
+  const step2Eur = step1Eur + warehousePerUnit;
+  const step2Hkd = step2Eur * rate;
+
+  return {
+    purchaseEur, purchaseHkd: purchaseEur * rate,
+    fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit,
+    palletPerUnit, alcPerUnit,
+    step1Eur, step1Hkd,
+    warehouseDetail, warehousePerUnit,
+    step2Eur, step2Hkd,
+    fobPct:    fobPerUnit    / step2Eur * 100,
+    licPct:    licPerUnit    / step2Eur * 100,
+    palletPct: palletPerUnit / step2Eur * 100,
+    uomLabel: uom,
+    ubicazioneLabel: ubicazione,
+  };
+}
+
+// ─── APP ─────────────────────────────────────────────────────────────────────
+const DEFAULT_EUR_HKD = 9.1437;
+
+const EMPTY = {
+  purchaseEur: "", qtyPerBox: "", boxPerPallet: "",
+  uom: "PCS", temperature: "DRY", area: "NORD",
+  pltPerContainer: "", eurToHkd: "",
+  ubicazione: "MTO", priceType: "DAP_FOR",
+  hasCert: false, hasAlcTax: false, alcTaxPerUnit: "",
+};
+
+export default function App() {
+  const [tab,    setTab]    = useState("FOOD");
+  const [form,   setForm]   = useState(EMPTY);
+  const [result, setResult] = useState(null);
+
+  const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setResult(null); };
+
+  const uomCfg    = UOM_CONFIG[form.uom];
+  const tempObj   = TEMP_OPTIONS.find(t => t.value === form.temperature);
+  const ubicObj   = UBIC_CONFIG[form.ubicazione];
+  const accentClr = tempObj?.color ?? "#C4873B";
+  const defaultPlt = C.DEFAULT_PLT_PER_CONTAINER[form.temperature];
+  const eurToHkd  = parseFloat(form.eurToHkd) || DEFAULT_EUR_HKD;
+
+  const canCalc = (() => {
+    if (!form.purchaseEur || parseFloat(form.purchaseEur) <= 0) return false;
+    if (!form.boxPerPallet || parseFloat(form.boxPerPallet) <= 0) return false;
+    if (uomCfg.showQty && (!form.qtyPerBox || parseFloat(form.qtyPerBox) <= 0)) return false;
+    return true;
+  })();
+
+  const handleCalc = useCallback(() => {
+    const plt = parseFloat(form.pltPerContainer) || defaultPlt;
+    setResult(calcStdCost({
+      purchaseEur:    parseFloat(form.purchaseEur),
+      uom:            form.uom,
+      qtyPerBox:      form.qtyPerBox,
+      boxPerPallet:   form.boxPerPallet,
+      temperature:    form.temperature,
+      area:           form.area,
+      pltPerContainer: plt,
+      hasCert:        form.hasCert,
+      hasAlcTax:      form.hasAlcTax,
+      alcTaxPerUnit:  form.alcTaxPerUnit,
+      ubicazione:     form.ubicazione,
+      eurToHkd,
+    }));
+  }, [form, defaultPlt]);
+
+  const fobWarn = (() => {
+    if (form.temperature === "DRY"    && form.area === "CENTRO") return "⚠️ DRY da Centro: FOB = 0 nel modello";
+    if (form.temperature === "FRESH"  && form.area === "SUD")    return "⚠️ Fresh da Sud: FOB = 0 nel modello";
+    if (form.temperature === "FROZEN" && form.area !== "NORD")   return "⚠️ Frozen disponibile solo da Nord";
+    return null;
+  })();
+
+  return (
+    <div style={{
+      minHeight: "100vh",
+      background: "linear-gradient(150deg,#0E1820 0%,#162030 60%,#0A1018 100%)",
+      fontFamily: "'Georgia','Times New Roman',serif",
+      color: "#DDD5C8",
+    }}>
+      {/* HEADER */}
+      <div style={{
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+        background: "rgba(0,0,0,0.3)",
+        padding: "20px 36px",
+        display: "flex", alignItems: "center", gap: "18px",
+      }}>
+        <div style={{
+          width: "42px", height: "42px",
+          background: `linear-gradient(135deg,${accentClr}cc,#1A3A4A)`,
+          borderRadius: "10px",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "20px",
+          boxShadow: `0 4px 20px ${accentClr}44`,
+          transition: "all 0.4s",
+        }}>🧮</div>
+        <div>
+          <div style={{ fontSize: "10px", letterSpacing: "3px", color: accentClr, textTransform: "uppercase" }}>
+            Hong Kong Branch · Inalca Food & Beverage
+          </div>
+          <div style={{ fontSize: "21px", fontWeight: "bold", lineHeight: 1.2 }}>
+            Standard Cost Estimator
+          </div>
+        </div>
+        <div style={{ marginLeft: "auto", textAlign: "right", fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
+          EUR/HKD: <strong style={{ color: eurToHkd !== DEFAULT_EUR_HKD ? "#E8C97A" : "rgba(255,255,255,0.55)" }}>
+            {eurToHkd.toFixed(4)}
+          </strong>
+          {eurToHkd !== DEFAULT_EUR_HKD && (
+            <span style={{ color: "#E8C97A", fontSize: "9px", marginLeft: "4px" }}>✎ modificato</span>
+          )}<br />
+          Modello 04/2026
+        </div>
+      </div>
+
+      <div style={{ maxWidth: "880px", margin: "0 auto", padding: "28px 20px 52px" }}>
+
+        {/* TABS */}
+        <div style={{ display: "flex", gap: "8px", marginBottom: "22px" }}>
+          {TABS.map(t => (
+            <button key={t.key} onClick={() => { setTab(t.key); setResult(null); }}
+              style={{
+                flex: 1, padding: "11px 6px",
+                background:  tab === t.key ? `${accentClr}22` : "rgba(255,255,255,0.03)",
+                border:      `1px solid ${tab === t.key ? accentClr : "rgba(255,255,255,0.08)"}`,
+                borderRadius: "9px",
+                color:       tab === t.key ? "#EEE" : "rgba(255,255,255,0.45)",
+                cursor: "pointer", fontFamily: "inherit", fontSize: "12px",
+                textAlign: "center", transition: "all 0.25s",
+              }}>
+              <div style={{ fontSize: "16px", marginBottom: "2px" }}>{t.label.split(" ")[0]}</div>
+              <div style={{ fontWeight: tab === t.key ? "bold" : "normal" }}>{t.label.slice(2)}</div>
+              <div style={{ fontSize: "9px", opacity: 0.55, marginTop: "1px" }}>{t.desc}</div>
+            </button>
+          ))}
+        </div>
+
+        {/* ── ROW 1: UOM + UBICAZIONE ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+
+          {/* UOM */}
+          <Section title="Unità di Misura (UOM)" icon="📐">
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "7px", marginBottom: "10px" }}>
+              {Object.entries(UOM_CONFIG).map(([key, cfg]) => (
+                <button key={key} onClick={() => set("uom", key)}
+                  style={{
+                    padding: "10px 6px",
+                    background:  form.uom === key ? `${accentClr}25` : "rgba(255,255,255,0.04)",
+                    border:      `2px solid ${form.uom === key ? accentClr : "rgba(255,255,255,0.09)"}`,
+                    borderRadius: "8px",
+                    color:       form.uom === key ? "#EEE" : "rgba(221,213,200,0.55)",
+                    cursor: "pointer", fontFamily: "inherit",
+                    fontSize: "11px", fontWeight: form.uom === key ? "bold" : "normal",
+                    transition: "all 0.2s", textAlign: "center",
+                  }}>
+                  <div style={{ fontSize: "16px", marginBottom: "3px" }}>{cfg.icon}</div>
+                  {cfg.label}
+                </button>
+              ))}
+            </div>
+            <div style={{
+              padding: "8px 11px",
+              background: `${accentClr}0E`,
+              border: `1px solid ${accentClr}28`,
+              borderRadius: "6px",
+              fontSize: "10px", color: "rgba(221,213,200,0.6)", lineHeight: "1.5",
+            }}>
+              {form.uom === "PCS" && "Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container."}
+              {form.uom === "BOX" && "Prezzo per cartone/box. Divisore = box/pallet × plt/container."}
+              {form.uom === "KG"  && "Prezzo per kg. Divisore = kg/cartone × cartoni/pallet × plt/container."}
+            </div>
+          </Section>
+
+          {/* UBICAZIONE (warehouse type) */}
+          <Section title="Gestione magazzino (Ubicazione)" icon="🏭">
+            <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+              {Object.entries(UBIC_CONFIG).map(([key, cfg]) => (
+                <button key={key} onClick={() => set("ubicazione", key)}
+                  style={{
+                    padding: "10px 12px",
+                    background:  form.ubicazione === key ? `${cfg.color}22` : "rgba(255,255,255,0.04)",
+                    border:      `1px solid ${form.ubicazione === key ? cfg.color : "rgba(255,255,255,0.09)"}`,
+                    borderRadius: "8px",
+                    color:       form.ubicazione === key ? "#EEE" : "rgba(221,213,200,0.55)",
+                    cursor: "pointer", fontFamily: "inherit",
+                    textAlign: "left", transition: "all 0.2s",
+                  }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "2px" }}>
+                    <span style={{ fontSize: "14px" }}>{cfg.icon}</span>
+                    <span style={{ fontSize: "12px", fontWeight: form.ubicazione === key ? "bold" : "normal" }}>
+                      {cfg.label}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.45)", paddingLeft: "21px" }}>
+                    {cfg.desc}
+                  </div>
+                </button>
+              ))}
+            </div>
+          </Section>
+        </div>
+
+        {/* ── ROW 2: PRICE TYPE + PRICE & DIMENSIONS ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+
+          {/* Price type */}
+          <Section title="Tipo di prezzo acquisto" icon="💶">
+            <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+              {Object.entries(PRICE_TYPE_CONFIG).map(([key, cfg]) => (
+                <button key={key} onClick={() => set("priceType", key)}
+                  style={{
+                    padding: "10px 12px",
+                    background:  form.priceType === key ? `${cfg.color}22` : "rgba(255,255,255,0.04)",
+                    border:      `1px solid ${form.priceType === key ? cfg.color : "rgba(255,255,255,0.09)"}`,
+                    borderRadius: "8px",
+                    color:       form.priceType === key ? "#EEE" : "rgba(221,213,200,0.55)",
+                    cursor: "pointer", fontFamily: "inherit",
+                    textAlign: "left", transition: "all 0.2s",
+                  }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "2px" }}>
+                    <span style={{ fontSize: "14px" }}>{cfg.icon}</span>
+                    <div>
+                      <span style={{ fontSize: "12px", fontWeight: form.priceType === key ? "bold" : "normal" }}>
+                        {cfg.label}
+                      </span>
+                      <span style={{ fontSize: "10px", color: "rgba(221,213,200,0.45)", marginLeft: "6px" }}>
+                        {cfg.sublabel}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.4)", paddingLeft: "21px", lineHeight: "1.4" }}>
+                    {cfg.desc}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {form.priceType === "FCA" && (
+              <div style={{
+                marginTop: "8px", padding: "8px 11px",
+                background: "rgba(255,180,50,0.08)",
+                border: "1px solid rgba(255,180,50,0.25)",
+                borderRadius: "6px",
+                fontSize: "10px", color: "rgba(255,200,80,0.8)", lineHeight: "1.5",
+              }}>
+                ⚠️ Aggiungi il costo carriage al prezzo prima di inserirlo. Consulta la colonna <strong>CARRIAGE UNITARIO</strong> in Work_tab.
+              </div>
+            )}
+          </Section>
+
+          {/* Price & dimensions */}
+          <Section title="Prezzo & Contenenza" icon="📦">
+            <Field
+              label={uomCfg.priceLabel}
+              placeholder="es. 2.50" suffix="€"
+              value={form.purchaseEur}
+              onChange={v => set("purchaseEur", v)}
+            />
+            {uomCfg.showQty && (
+              <Field
+                label={uomCfg.qtyLabel}
+                placeholder={uomCfg.qtyPlaceholder}
+                suffix={uomCfg.qtySuffix}
+                value={form.qtyPerBox}
+                onChange={v => set("qtyPerBox", v)}
+              />
+            )}
+            <Field
+              label={form.uom === "BOX" ? "Cartoni (BOX) per pallet" : "Cartoni per pallet"}
+              placeholder="es. 70" suffix="crt"
+              value={form.boxPerPallet}
+              onChange={v => set("boxPerPallet", v)}
+              hint={uomCfg.hint({ qtyPerBox: form.qtyPerBox, boxPerPallet: form.boxPerPallet })}
+            />
+            <Field
+              label={`Pallet per container (default: ${defaultPlt})`}
+              placeholder={`${defaultPlt}`} suffix="plt"
+              value={form.pltPerContainer}
+              onChange={v => set("pltPerContainer", v)}
+              hint="Lascia vuoto per il default standard"
+            />
+            <Field
+              label={`Tasso di cambio EUR → HKD (default: ${DEFAULT_EUR_HKD})`}
+              placeholder={`${DEFAULT_EUR_HKD}`} suffix="HKD"
+              value={form.eurToHkd}
+              onChange={v => set("eurToHkd", v)}
+              hint={form.eurToHkd && parseFloat(form.eurToHkd) !== DEFAULT_EUR_HKD
+                ? `→ usando ${parseFloat(form.eurToHkd).toFixed(4)} (aggiornato)`
+                : "Lascia vuoto per usare il default 04/2026"}
+            />
+          </Section>
+        </div>
+
+        {/* ── ROW 3: TEMPERATURE + AREA + OPTIONS ── */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+
+          <Section title="Temperatura" icon="🌡️">
+            <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+              {TEMP_OPTIONS.map(opt => (
+                <RadioCard key={opt.value}
+                  label={opt.label} color={opt.color}
+                  selected={form.temperature === opt.value}
+                  onClick={() => set("temperature", opt.value)}
+                />
+              ))}
+            </div>
+          </Section>
+
+          <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+            <Section title="Area fornitore" icon="📍">
+              <div style={{ display: "flex", gap: "7px" }}>
+                {AREA_OPTIONS.map(a => (
+                  <button key={a.value} onClick={() => set("area", a.value)}
+                    style={{
+                      flex: 1, padding: "9px 4px",
+                      background:  form.area === a.value ? `${accentClr}22` : "rgba(255,255,255,0.04)",
+                      border:      `1px solid ${form.area === a.value ? accentClr : "rgba(255,255,255,0.1)"}`,
+                      borderRadius: "7px",
+                      color:       form.area === a.value ? "#EEE" : "rgba(221,213,200,0.55)",
+                      cursor: "pointer", fontSize: "11px",
+                      fontFamily: "inherit", transition: "all 0.2s",
+                    }}>
+                    {a.label}
+                  </button>
+                ))}
+              </div>
+              {fobWarn && (
+                <div style={{ fontSize: "10px", color: "#E08040", marginTop: "7px" }}>{fobWarn}</div>
+              )}
+            </Section>
+
+            <Section title="Voci opzionali" icon="⚙️">
+              <Toggle label="Health Certificate" desc="80 € / container"
+                checked={form.hasCert} onChange={v => set("hasCert", v)} color="#4A9B6C" />
+              <div style={{ height: "7px" }} />
+              <Toggle label="Tassa alcolici >30°" desc="Solo superalcolici"
+                checked={form.hasAlcTax} onChange={v => set("hasAlcTax", v)} color="#9B4A6C" />
+              {form.hasAlcTax && (
+                <div style={{ marginTop: "8px" }}>
+                  <Field label={`Tassa alcolici (€ / ${form.uom.toLowerCase()})`}
+                    placeholder="es. 1.50" suffix="€"
+                    value={form.alcTaxPerUnit}
+                    onChange={v => set("alcTaxPerUnit", v)} />
+                </div>
+              )}
+            </Section>
+          </div>
+        </div>
+
+        {/* CALCULATE */}
+        <button onClick={handleCalc} disabled={!canCalc}
+          style={{
+            width: "100%", padding: "15px",
+            background:   canCalc ? `linear-gradient(135deg,${accentClr},#1A4060)` : "rgba(255,255,255,0.04)",
+            border:       canCalc ? "none" : "1px solid rgba(255,255,255,0.08)",
+            borderRadius: "10px",
+            color:        canCalc ? "#fff" : "rgba(255,255,255,0.25)",
+            fontSize: "14px", fontWeight: "bold", letterSpacing: "1px",
+            fontFamily: "inherit", cursor: canCalc ? "pointer" : "not-allowed",
+            transition: "all 0.3s",
+            boxShadow: canCalc ? `0 8px 28px ${accentClr}44` : "none",
+          }}>
+          {canCalc ? "✦  CALCOLA STANDARD COST" : "Completa i campi per calcolare"}
+        </button>
+
+        {/* RESULTS */}
+        {result && (
+          <div style={{ marginTop: "28px" }}>
+            <div style={{ fontSize: "10px", letterSpacing: "3px", color: accentClr, textTransform: "uppercase", marginBottom: "14px" }}>
+              ✦ Risultati — Standard Cost 2 · {result.uomLabel} · {UBIC_CONFIG[result.ubicazioneLabel].label}
+            </div>
+
+            {/* Big numbers */}
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
+              <BigResult label="Standard Cost 2"
+                sublabel={`EURO · per ${result.uomLabel}`}
+                value={`€ ${result.step2Eur.toFixed(4)}`} color={accentClr} />
+              <BigResult label="Standard Cost 2"
+                sublabel={`HKD · per ${result.uomLabel}`}
+                value={`HK$ ${result.step2Hkd.toFixed(2)}`} color="#4A9B9B" />
+            </div>
+
+            {/* Detail breakdown */}
+            <div style={{
+              background: "rgba(255,255,255,0.03)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              borderRadius: "10px", padding: "18px", marginBottom: "12px",
+            }}>
+              <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.45)", marginBottom: "12px" }}>
+                DETTAGLIO COSTI · per {result.uomLabel}
+              </div>
+
+              <CostRow label="Prezzo acquisto"           eur={result.purchaseEur}  hkd={result.purchaseHkd} highlight />
+              <Divider />
+              <CostRow label="FOB + Nolo"                eur={result.fobPerUnit}   pct={result.fobPct} />
+              <CostRow label="Local Import Charges"       eur={result.licPerUnit}   pct={result.licPct} />
+              <CostRow label="VGM Charges"               eur={result.vgmPerUnit} />
+              {result.hcPerUnit > 0 && (
+                <CostRow label="Health Certificate"      eur={result.hcPerUnit} />
+              )}
+              <CostRow label="Costo pallet"              eur={result.palletPerUnit} pct={result.palletPct} />
+              {result.alcPerUnit > 0 && (
+                <CostRow label="Tassa alcolici"          eur={result.alcPerUnit} />
+              )}
+              <Divider />
+              <CostRow label="→ Standard Cost Step 1"    eur={result.step1Eur}   hkd={result.step1Hkd} bold />
+              <Divider />
+
+              {/* Warehouse breakdown */}
+              {result.warehouseDetail.type === "MTO" && (
+                <CostRow label="🔄 MTO — In+Stock+Out" eur={result.warehouseDetail.total} />
+              )}
+              {result.warehouseDetail.type === "FOR" && (
+                <div style={{ fontSize: "11px", color: "rgba(106,155,74,0.75)", padding: "4px 0", fontStyle: "italic" }}>
+                  🚛 FOR — Nessun costo di handling aggiunto
+                </div>
+              )}
+              {result.warehouseDetail.type === "MTS" && (
+                <>
+                  <CostRow label="🏭 MTS — Deposito (quindicina)"  eur={result.warehouseDetail.dep} />
+                  <CostRow label="🏭 MTS — Inbound"                eur={result.warehouseDetail.inbound} />
+                  <CostRow label="🏭 MTS — Picking (per collo)"    eur={result.warehouseDetail.picking} />
+                </>
+              )}
+
+              <Divider />
+              <CostRow label="→ Standard Cost Step 2"
+                eur={result.step2Eur} hkd={result.step2Hkd} bold accent accentColor={accentClr} />
+            </div>
+
+            <CostBar result={result} accentClr={accentClr} />
+
+            <div style={{
+              marginTop: "14px", padding: "12px 16px",
+              background: "rgba(255,200,80,0.04)",
+              border: "1px solid rgba(255,200,80,0.12)",
+              borderRadius: "8px",
+              fontSize: "11px", color: "rgba(221,213,200,0.4)", lineHeight: "1.7",
+            }}>
+              ⚠️ <strong style={{ color: "rgba(221,213,200,0.6)" }}>Nota:</strong> Stima indicativa
+              (modello HK 04/2026). Non includono: etichettatura, stock extra-periodo,
+              demurrage, accordi specifici fornitore. Per prodotti FCA verificare il costo
+              carriage in Work_tab prima di inserire il prezzo.
+              Verificare sempre con il modello Excel prima del caricamento su NAV.
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── SUB-COMPONENTS ───────────────────────────────────────────────────────────
+
+function Section({ title, icon, children }) {
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.025)",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: "10px", padding: "16px",
+    }}>
+      <div style={{
+        fontSize: "10px", letterSpacing: "2px",
+        color: "rgba(196,135,59,0.75)", textTransform: "uppercase",
+        marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px",
+      }}>
+        <span>{icon}</span>{title}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function Field({ label, placeholder, value, onChange, suffix, hint }) {
+  return (
+    <div style={{ marginBottom: "10px" }}>
+      <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "5px" }}>{label}</label>
+      <div style={{ position: "relative" }}>
+        <input type="number" placeholder={placeholder} value={value}
+          onChange={e => onChange(e.target.value)}
+          style={{
+            width: "100%", padding: "9px 34px 9px 11px",
+            background: "rgba(255,255,255,0.06)",
+            border: "1px solid rgba(255,255,255,0.1)",
+            borderRadius: "7px", color: "#DDD5C8", fontSize: "14px",
+            fontFamily: "inherit", outline: "none",
+            boxSizing: "border-box", transition: "border-color 0.2s",
+          }}
+          onFocus={e => (e.target.style.borderColor = "rgba(196,135,59,0.5)")}
+          onBlur={e  => (e.target.style.borderColor = "rgba(255,255,255,0.1)")}
+        />
+        {suffix && (
+          <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(221,213,200,0.3)" }}>
+            {suffix}
+          </span>
+        )}
+      </div>
+      {hint && <div style={{ fontSize: "10px", color: "rgba(196,135,59,0.6)", marginTop: "3px" }}>{hint}</div>}
+    </div>
+  );
+}
+
+function RadioCard({ label, selected, color, onClick }) {
+  return (
+    <button onClick={onClick}
+      style={{
+        padding: "9px 12px",
+        background:  selected ? `${color}22` : "rgba(255,255,255,0.04)",
+        border:      `1px solid ${selected ? color : "rgba(255,255,255,0.09)"}`,
+        borderRadius: "7px", color: selected ? "#EEE" : "rgba(221,213,200,0.6)",
+        cursor: "pointer", fontFamily: "inherit", fontSize: "12px",
+        textAlign: "left", transition: "all 0.2s",
+      }}>
+      {label}
+    </button>
+  );
+}
+
+function Toggle({ label, desc, checked, onChange, color }) {
+  return (
+    <div onClick={() => onChange(!checked)}
+      style={{
+        padding: "10px 12px",
+        background:  checked ? `${color}18` : "rgba(255,255,255,0.03)",
+        border:      `1px solid ${checked ? color : "rgba(255,255,255,0.08)"}`,
+        borderRadius: "8px", cursor: "pointer", transition: "all 0.2s", userSelect: "none",
+      }}>
+      <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
+        <div style={{
+          width: "16px", height: "16px",
+          background:  checked ? color : "rgba(255,255,255,0.1)",
+          borderRadius: "4px",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: "10px", flexShrink: 0,
+        }}>{checked ? "✓" : ""}</div>
+        <span style={{ fontSize: "12px", fontWeight: "bold", color: checked ? "#EEE" : "rgba(221,213,200,0.65)" }}>{label}</span>
+      </div>
+      <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.4)", paddingLeft: "24px" }}>{desc}</div>
+    </div>
+  );
+}
+
+function BigResult({ label, sublabel, value, color }) {
+  return (
+    <div style={{
+      background:  `linear-gradient(135deg,${color}18,rgba(0,0,0,0.3))`,
+      border:      `1px solid ${color}44`,
+      borderRadius: "12px", padding: "18px", textAlign: "center",
+    }}>
+      <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.45)", textTransform: "uppercase" }}>{label}</div>
+      <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.35)", marginBottom: "8px" }}>{sublabel}</div>
+      <div style={{ fontSize: "26px", fontWeight: "bold", color, fontVariantNumeric: "tabular-nums" }}>{value}</div>
+    </div>
+  );
+}
+
+function CostRow({ label, eur, hkd, pct, bold, accent, accentColor, highlight }) {
+  const color = accent ? accentColor : highlight ? "#DDD5C8" : "rgba(221,213,200,0.55)";
+  return (
+    <div style={{
+      display: "flex", justifyContent: "space-between", alignItems: "center",
+      padding: "4px 0", fontSize: bold ? "13px" : "12px",
+      color, fontWeight: bold ? "bold" : "normal",
+    }}>
+      <span>{label}</span>
+      <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
+        {pct !== undefined && (
+          <span style={{ fontSize: "10px", color: "rgba(221,213,200,0.3)", minWidth: "38px", textAlign: "right" }}>
+            {pct.toFixed(1)}%
+          </span>
+        )}
+        <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right" }}>
+          € {eur.toFixed(4)}
+        </span>
+        {hkd !== undefined && (
+          <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right", color: "#4A9B9B" }}>
+            HK$ {hkd.toFixed(2)}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function Divider() {
+  return <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "7px 0" }} />;
+}
+
+function CostBar({ result, accentClr }) {
+  const wd = result.warehouseDetail;
+  const items = [
+    { label: "Prezzo acquisto", value: result.purchaseEur,  color: accentClr },
+    { label: "FOB + Nolo",      value: result.fobPerUnit,   color: "#4A8C9B" },
+    { label: "LIC + VGM + HC",  value: result.licPerUnit + result.vgmPerUnit + result.hcPerUnit, color: "#9B7A4A" },
+    { label: "Pallet",          value: result.palletPerUnit, color: "#6A9B4A" },
+    wd.type === "MTO" && { label: "MTO",     value: wd.total,    color: "#4A8C5B" },
+    wd.type === "MTS" && { label: "MTS Dep", value: wd.dep,      color: "#C4873B" },
+    wd.type === "MTS" && { label: "MTS In",  value: wd.inbound,  color: "#B37030" },
+    wd.type === "MTS" && { label: "MTS Pick",value: wd.picking,  color: "#A26020" },
+    result.alcPerUnit > 0 && { label: "Alc Tax", value: result.alcPerUnit, color: "#9B4A6C" },
+  ].filter(Boolean).filter(i => i.value > 0);
+
+  const total = result.step2Eur;
+  return (
+    <div style={{
+      background: "rgba(255,255,255,0.025)",
+      border: "1px solid rgba(255,255,255,0.07)",
+      borderRadius: "10px", padding: "14px 16px",
+    }}>
+      <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.4)", marginBottom: "10px" }}>
+        COMPOSIZIONE DEL COSTO
+      </div>
+      <div style={{ display: "flex", height: "11px", borderRadius: "6px", overflow: "hidden", marginBottom: "10px" }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ flex: it.value / total, background: it.color, opacity: 0.85 }} />
+        ))}
+      </div>
+      <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
+        {items.map((it, i) => (
+          <div key={i} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "rgba(221,213,200,0.55)" }}>
+            <div style={{ width: "8px", height: "8px", background: it.color, borderRadius: "2px", opacity: 0.85 }} />
+            {it.label} ({(it.value / total * 100).toFixed(1)}%)
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
