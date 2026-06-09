@@ -21,7 +21,7 @@
 
         const { useState, useCallback } = React;
 
-        // ─── COST CONSTANTS (COSTS LOG sheet, 2026) ───────────────────────────────
+        // ─── COST CONSTANTS (COSTS LOG sheet, 04/2026) ───────────────────────────────
         const C = {
           EUR_TO_HKD: 9.1437,
 
@@ -97,11 +97,11 @@
         };
 
         // ─── PRICE TYPE ──────────────────────────────────────────────────────────────
-        const PRICE_TYPE_CONFIG = {
-          DAP_FOR: { label: "DAP / FOR", icon: "📋", sublabel: "Prezzo incluso trasporto", desc: "Delivered at Place — il fornitore porta la merce", color: "#4A9B6C" },
-          FCA: { label: "FCA", icon: "🏗️", sublabel: "Free Carrier", desc: "Il prezzo non include il trasporto. Aggiungere costo carriage", color: "#9B7A4A" },
-          MTS_PRICE: { label: "MTS (con IC)", icon: "🔗", sublabel: "Prezzo intercompany", desc: "Prezzo con maggiorazione IC (1%)", color: "#7B4AC4" },
-        };
+        // const PRICE_TYPE_CONFIG = {
+        //   DAP_FOR: { label: "DAP / FOR", icon: "📋", sublabel: "Prezzo incluso trasporto", desc: "Delivered at Place — il fornitore porta la merce", color: "#4A9B6C" },
+        //   FCA: { label: "FCA", icon: "🏗️", sublabel: "Free Carrier", desc: "Il prezzo non include il trasporto. Aggiungere costo carriage", color: "#9B7A4A" },
+        //   MTS_PRICE: { label: "MTS (con IC)", icon: "🔗", sublabel: "Prezzo intercompany", desc: "Prezzo con maggiorazione IC (1%)", color: "#7B4AC4" },
+        // };
 
         const TEMP_OPTIONS = [
           { value: "DRY",    label: "🌾 Dry (Secco)",           color: "#C4873B" },
@@ -191,9 +191,12 @@
           </div>
         );
 
-        const Field = ({ label, placeholder, value, onChange, suffix, hint }) => (
+        const Field = ({ label, placeholder, value, onChange, suffix, hint, note }) => (
           <div style={{ marginBottom: "10px" }}>
-            <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "5px" }}>{label}</label>
+            <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "5px" }}>
+              {label}
+              {note && <span style={{ marginLeft: "8px", fontSize: "9px", color: "rgba(196,135,59,0.6)", fontStyle: "italic" }}>{note}</span>}
+            </label>
             <div style={{ position: "relative" }}>
               <input type="number" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} step="any"
                 style={{ width: "100%", padding: "9px 34px 9px 11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "7px", color: "#DDD5C8", fontSize: "14px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
@@ -392,8 +395,9 @@
                   </Section>
                 </div>
 
-                {/* ROW 2 */}
+                {/* ROW 2 - SEZIONE TIPO DI PREZZO ACQUISTO COMMENTATA (NASCOSTA) */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
+                  {/* 
                   <Section title="Tipo di prezzo acquisto" icon="💶">
                     <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
                       {Object.entries(PRICE_TYPE_CONFIG).map(([key, cfg]) => (
@@ -408,9 +412,17 @@
                       ))}
                     </div>
                   </Section>
+                  */}
 
                   <Section title="Prezzo & Contenenza" icon="📦">
-                    <Field label={uomCfg.priceLabel} placeholder="es. 2.50" suffix="€" value={form.purchaseEur} onChange={v => set("purchaseEur", v)} />
+                    <Field 
+                      label={uomCfg.priceLabel} 
+                      note="(LISTINO FORNITORE + INTERCOMPANY + EVENTUALE CARRIAGE)"
+                      placeholder="es. 2.50" 
+                      suffix="€" 
+                      value={form.purchaseEur} 
+                      onChange={v => set("purchaseEur", v)} 
+                    />
                     {uomCfg.showQty && <Field label={uomCfg.qtyLabel} placeholder={uomCfg.qtyPlaceholder} suffix={uomCfg.qtySuffix} value={form.qtyPerBox} onChange={v => set("qtyPerBox", v)} />}
                     <Field label={form.uom === "BOX" ? "Cartoni (BOX) per pallet" : "Cartoni per pallet"} placeholder="es. 70" suffix="crt" value={form.boxPerPallet} onChange={v => set("boxPerPallet", v)} hint={uomCfg.hint({ qtyPerBox: form.qtyPerBox, boxPerPallet: form.boxPerPallet })} />
                     <Field label={`Pallet per container (default: ${defaultPlt})`} placeholder={`${defaultPlt}`} suffix="plt" value={form.pltPerContainer} onChange={v => set("pltPerContainer", v)} hint="Lascia vuoto per il default standard" />
