@@ -225,14 +225,15 @@
           </div>
         );
 
-        const CostRow = ({ label, eur, hkd, pct, bold, accent, accentColor, highlight }) => {
+        const CostRow = ({ label, eur, hkd, pct, bold, accent, accentColor, highlight, roundedEur = false }) => {
           const color = accent ? accentColor : highlight ? "#DDD5C8" : "rgba(221,213,200,0.55)";
+          const displayEur = roundedEur ? eur.toFixed(2) : eur.toFixed(4);
           return (
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", fontSize: bold ? "13px" : "12px", color, fontWeight: bold ? "bold" : "normal" }}>
               <span>{label}</span>
               <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
                 {pct !== undefined && <span style={{ fontSize: "10px", color: "rgba(221,213,200,0.3)", minWidth: "38px", textAlign: "right" }}>{pct.toFixed(1)}%</span>}
-                <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right" }}>€ {eur.toFixed(4)}</span>
+                <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right" }}>€ {displayEur}</span>
                 {hkd !== undefined && <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right", color: "#4A9B9B" }}>HK$ {hkd.toFixed(2)}</span>}
               </div>
             </div>
@@ -453,7 +454,7 @@
                   <div style={{ marginTop: "28px" }}>
                     <div style={{ fontSize: "10px", letterSpacing: "3px", color: accentClr, textTransform: "uppercase", marginBottom: "14px" }}>✦ Risultati — Standard Cost 2 · {result.uomLabel} · {UBIC_CONFIG[result.ubicazioneLabel]?.label || ""}</div>
                     <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-                      <BigResult label="Standard Cost 2" sublabel={`EURO · per ${result.uomLabel}`} value={`€ ${result.step2Eur.toFixed(4)}`} color={accentClr} />
+                      <BigResult label="Standard Cost 2" sublabel={`EURO · per ${result.uomLabel}`} value={`€ ${result.step2Eur.toFixed(2)}`} color={accentClr} />
                       <BigResult label="Standard Cost 2" sublabel={`HKD · per ${result.uomLabel}`} value={`HK$ ${result.step2Hkd.toFixed(2)}`} color="#4A9B9B" />
                     </div>
                     <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "18px", marginBottom: "12px" }}>
@@ -467,13 +468,13 @@
                       <CostRow label="Costo pallet" eur={result.palletPerUnit} pct={result.palletPct} />
                       {result.alcPerUnit > 0 && <CostRow label="Tassa alcolici" eur={result.alcPerUnit} />}
                       <Divider />
-                      <CostRow label="→ Standard Cost Step 1" eur={result.step1Eur} hkd={result.step1Hkd} bold />
+                      <CostRow label="→ Standard Cost Step 1" eur={result.step1Eur} hkd={result.step1Hkd} bold roundedEur={true} />
                       <Divider />
                       {result.warehouseDetail.type === "MTO" && <CostRow label="🔄 MTO — In+Stock+Out" eur={result.warehouseDetail.total} />}
                       {result.warehouseDetail.type === "FOR" && <div style={{ fontSize: "11px", color: "rgba(106,155,74,0.75)", padding: "4px 0", fontStyle: "italic" }}>🚛 FOR — Nessun costo di handling aggiunto</div>}
                       {result.warehouseDetail.type === "MTS" && (<><CostRow label="🏭 MTS — Deposito" eur={result.warehouseDetail.dep} /><CostRow label="🏭 MTS — Inbound" eur={result.warehouseDetail.inbound} /><CostRow label="🏭 MTS — Picking" eur={result.warehouseDetail.picking} /></>)}
                       <Divider />
-                      <CostRow label="→ Standard Cost Step 2" eur={result.step2Eur} hkd={result.step2Hkd} bold accent accentColor={accentClr} />
+                      <CostRow label="→ Standard Cost Step 2" eur={result.step2Eur} hkd={result.step2Hkd} bold accent accentColor={accentClr} roundedEur={true} />
                     </div>
                     <CostBar result={result} accentClr={accentClr} />
                     <div style={{ marginTop: "14px", padding: "12px 16px", background: "rgba(255,200,80,0.04)", border: "1px solid rgba(255,200,80,0.12)", borderRadius: "8px", fontSize: "11px", color: "rgba(221,213,200,0.4)" }}>⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026).</div>
