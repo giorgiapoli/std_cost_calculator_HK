@@ -274,7 +274,20 @@
           const [form, setForm] = useState(EMPTY);
           const [result, setResult] = useState(null);
 
-          const set = (k, v) => { setForm(f => ({ ...f, [k]: v })); setResult(null); };
+          const set = (k, v) => { 
+            setForm(f => ({ ...f, [k]: v })); 
+            setResult(null); 
+          };
+
+          // Auto-set alc tax when enabled
+          React.useEffect(() => {
+            if (form.hasAlcTax && form.purchaseEur && parseFloat(form.purchaseEur) > 0) {
+              const price = parseFloat(form.purchaseEur);
+              if (!isNaN(price)) {
+                set("alcTaxPerUnit", price.toString());
+              }
+            }
+          }, [form.hasAlcTax, form.purchaseEur]);
 
           const uomCfg = UOM_CONFIG[form.uom];
           const tempObj = TEMP_OPTIONS.find(t => t.value === form.temperature);
@@ -305,7 +318,7 @@
               ubicazione: form.ubicazione,
               eurToHkd,
             }));
-          }, [form, defaultPlt]);
+          }, [form, defaultPlt, eurToHkd]);
 
           const fobWarn = (() => {
             if (form.temperature === "DRY" && form.area === "CENTRO") return "⚠️ DRY da Centro: FOB = 0 nel modello";
