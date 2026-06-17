@@ -5,84 +5,52 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standard Cost Calculator HK | Inalca Food & Beverage</title>
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; font-family: 'Georgia', 'Times New Roman', serif; background: linear-gradient(150deg,#0E1820 0%,#162030 60%,#0A1018 100%); color: #DDD5C8; min-height: 100vh; }
-        .header { border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.3); padding: 20px 36px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
-        .header-icon { width: 42px; height: 42px; background: linear-gradient(135deg,#C4873B,#1A3A4A); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 20px rgba(196,135,59,0.3); }
-        .header-title { font-size: 10px; letter-spacing: 3px; color: #C4873B; text-transform: uppercase; }
-        .header-sub { font-size: 21px; font-weight: bold; line-height: 1.2; }
-        .header-rate { margin-left: auto; text-align: right; font-size: 11px; color: rgba(255,255,255,0.3); }
-        .header-rate strong { color: rgba(255,255,255,0.55); }
-        
-        .container { max-width: 880px; margin: 0 auto; padding: 28px 20px 52px; }
-        
-        .section { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
-        .section-title { font-size: 10px; letter-spacing: 2px; color: rgba(196,135,59,0.75); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
-        
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
-        
-        .field { margin-bottom: 10px; }
-        .field label { display: block; font-size: 11px; color: rgba(221,213,200,0.5); margin-bottom: 5px; }
-        .field .note { margin-left: 8px; font-size: 9px; color: rgba(196,135,59,0.6); font-style: italic; }
-        .field input { width: 100%; padding: 9px 11px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #DDD5C8; font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box; }
-        .field input:focus { border-color: rgba(196,135,59,0.5); }
-        .field .hint { font-size: 10px; color: rgba(196,135,59,0.6); margin-top: 3px; }
-        
-        .btn-radio { padding: 9px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 7px; color: rgba(221,213,200,0.6); cursor: pointer; font-family: inherit; font-size: 12px; text-align: left; transition: all 0.2s; }
-        .btn-radio.active { color: #EEE; }
-        .btn-radio:disabled { opacity: 0.4; cursor: not-allowed; }
-        
-        .btn-uom { padding: 10px 6px; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.09); border-radius: 8px; color: rgba(221,213,200,0.55); cursor: pointer; font-family: inherit; font-size: 11px; text-align: center; transition: all 0.2s; }
-        .btn-uom.active { background: rgba(196,135,59,0.2); border-color: #C4873B; color: #EEE; }
-        .btn-uom .icon { font-size: 16px; display: block; margin-bottom: 3px; }
-        
-        .btn-area { flex: 1; padding: 9px 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: rgba(221,213,200,0.55); cursor: pointer; font-size: 11px; font-family: inherit; transition: all 0.2s; }
-        .btn-area.active { background: rgba(196,135,59,0.2); border-color: #C4873B; color: #EEE; }
-        
-        .toggle { padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none; }
-        .toggle.active { background: rgba(74,155,108,0.12); border-color: #4A9B6C; }
-        .toggle .check { width: 16px; height: 16px; background: rgba(255,255,255,0.1); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; margin-right: 8px; flex-shrink: 0; }
-        .toggle.active .check { background: #4A9B6C; }
-        
-        .calc-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 1px; font-family: inherit; cursor: pointer; transition: all 0.3s; }
-        .calc-btn:disabled { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); cursor: not-allowed; border: 1px solid rgba(255,255,255,0.08); }
-        
-        .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; margin-bottom: 12px; }
-        .result-big { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
-        .result-box { background: linear-gradient(135deg,rgba(196,135,59,0.12),rgba(0,0,0,0.3)); border: 1px solid rgba(196,135,59,0.3); border-radius: 12px; padding: 18px; text-align: center; }
-        .result-box .label { font-size: 10px; letter-spacing: 2px; color: rgba(221,213,200,0.45); text-transform: uppercase; }
-        .result-box .sub { font-size: 10px; color: rgba(221,213,200,0.35); margin-bottom: 8px; }
-        .result-box .value { font-size: 26px; font-weight: bold; color: #E8C97A; font-variant-numeric: tabular-nums; }
-        
-        .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px; color: rgba(221,213,200,0.55); }
-        .cost-row.bold { font-size: 13px; font-weight: bold; color: #DDD5C8; }
-        .cost-row .mono { font-family: monospace; }
-        .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 7px 0; }
-        
-        .pvp-section { margin-top: 20px; padding: 20px; background: rgba(196,135,59,0.06); border: 1px solid rgba(196,135,59,0.2); border-radius: 10px; }
-        .pvp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
-        .pvp-field { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
-        .pvp-field label { display: block; font-size: 11px; color: rgba(221,213,200,0.5); margin-bottom: 6px; }
-        .pvp-field input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #DDD5C8; font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box; }
-        .margin-box { margin-top: 10px; padding: 10px 12px; background: rgba(74,155,108,0.1); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #DDD5C8; }
-        .margin-box .pct { font-weight: bold; font-size: 20px; }
-        .margin-box .pct.positive { color: #4A9B6C; }
-        .margin-box .pct.negative { color: #B5534A; }
-        .margin-detail { font-size: 10px; color: rgba(221,213,200,0.35); margin-top: 6px; }
-        .margin-detail.negative { color: #B5534A; }
-        
-        .disclaimer { margin-top: 14px; padding: 12px 16px; background: rgba(255,200,80,0.04); border: 1px solid rgba(255,200,80,0.12); border-radius: 8px; font-size: 11px; color: rgba(221,213,200,0.4); }
-        .warn { font-size: 10px; color: #E08040; margin-top: 7px; }
-        .hidden { display: none; }
-        
-        @media (max-width: 600px) {
-            .grid-2 { grid-template-columns: 1fr; }
-            .pvp-grid { grid-template-columns: 1fr; }
-            .header { padding: 16px 20px; }
-            .container { padding: 20px 14px 40px; }
-            .result-big { grid-template-columns: 1fr; }
-        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:Georgia,serif; background:#0E1820; color:#DDD5C8; min-height:100vh; }
+        .header { background:rgba(0,0,0,0.3); padding:20px 36px; border-bottom:1px solid rgba(255,255,255,0.07); display:flex; align-items:center; gap:18px; flex-wrap:wrap; }
+        .header-icon { width:42px; height:42px; background:linear-gradient(135deg,#C4873B,#1A3A4A); border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:20px; }
+        .container { max-width:880px; margin:0 auto; padding:28px 20px 52px; }
+        .box { background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.07); border-radius:10px; padding:16px; margin-bottom:14px; }
+        .box-title { font-size:10px; letter-spacing:2px; color:#C4873B; text-transform:uppercase; margin-bottom:12px; display:flex; align-items:center; gap:6px; }
+        .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+        .field { margin-bottom:10px; }
+        .field label { display:block; font-size:11px; color:rgba(221,213,200,0.5); margin-bottom:5px; }
+        .field input { width:100%; padding:9px 11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:14px; font-family:inherit; outline:none; }
+        .field input:focus { border-color:rgba(196,135,59,0.5); }
+        .btn { padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; transition:all 0.2s; width:100%; text-align:center; }
+        .btn.active { color:#EEE; background:rgba(196,135,59,0.15); border-color:#C4873B; }
+        .btn-group { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
+        .btn-area-group { display:flex; gap:7px; }
+        .btn-area { flex:1; padding:9px 4px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:rgba(221,213,200,0.55); cursor:pointer; font-size:11px; font-family:inherit; transition:all 0.2s; text-align:center; }
+        .btn-area.active { background:rgba(196,135,59,0.2); border-color:#C4873B; color:#EEE; }
+        .btn-option { padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; text-align:center; transition:all 0.2s; }
+        .btn-option.active { color:#EEE; }
+        .calc-btn { width:100%; padding:15px; background:linear-gradient(135deg,#C4873B,#1A4060); border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:bold; letter-spacing:1px; font-family:inherit; cursor:pointer; transition:all 0.3s; }
+        .calc-btn:disabled { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.25); cursor:not-allowed; box-shadow:none; }
+        .calc-btn:not(:disabled) { box-shadow:0 8px 28px rgba(196,135,59,0.35); }
+        .result-card { background:rgba(255,255,255,0.03); border:1px solid rgba(196,135,59,0.2); border-radius:12px; padding:18px; text-align:center; }
+        .result-card .label { font-size:10px; color:rgba(221,213,200,0.45); text-transform:uppercase; letter-spacing:2px; }
+        .result-card .sub { font-size:10px; color:rgba(221,213,200,0.35); margin-bottom:8px; }
+        .result-card .value { font-size:26px; font-weight:bold; color:#E8C97A; font-variant-numeric:tabular-nums; }
+        .cost-row { display:flex; justify-content:space-between; padding:4px 0; font-size:12px; color:rgba(221,213,200,0.55); }
+        .cost-row.bold { font-weight:bold; color:#DDD5C8; }
+        .cost-row.highlight { color:#E8C97A; }
+        .divider { height:1px; background:rgba(255,255,255,0.06); margin:7px 0; }
+        .pvp-section { margin-top:20px; padding:20px; background:rgba(196,135,59,0.06); border:1px solid rgba(196,135,59,0.2); border-radius:10px; }
+        .pvp-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+        .pvp-field { background:rgba(255,255,255,0.04); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); }
+        .pvp-field label { display:block; font-size:11px; color:rgba(221,213,200,0.5); margin-bottom:6px; }
+        .pvp-field input { width:100%; padding:10px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:14px; font-family:inherit; outline:none; }
+        .margin-box { margin-top:10px; padding:10px 12px; background:rgba(74,155,108,0.1); border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
+        .margin-box .pct { font-weight:bold; font-size:20px; }
+        .pct.positive { color:#4A9B6C; }
+        .pct.negative { color:#B5534A; }
+        .margin-detail { font-size:10px; margin-top:6px; }
+        .hidden { display:none; }
+        .warn { font-size:10px; color:#E08040; margin-top:7px; }
+        .hint { font-size:10px; color:rgba(196,135,59,0.6); margin-top:3px; }
+        .disclaimer { margin-top:14px; padding:12px 16px; background:rgba(255,200,80,0.04); border:1px solid rgba(255,200,80,0.12); border-radius:8px; font-size:11px; color:rgba(221,213,200,0.4); }
+        @media (max-width:600px) { .grid-2 { grid-template-columns:1fr; } .pvp-grid { grid-template-columns:1fr; } .header { padding:16px 20px; } .container { padding:20px 14px 40px; } }
     </style>
 </head>
 <body>
@@ -90,144 +58,137 @@
 <div class="header">
     <div class="header-icon">🧮</div>
     <div>
-        <div class="header-title">Hong Kong Branch · Inalca Food & Beverage</div>
-        <div class="header-sub">Standard Cost Estimator</div>
+        <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;">Hong Kong Branch · Inalca Food & Beverage</div>
+        <div style="font-size:21px;font-weight:bold;line-height:1.2;">Standard Cost Estimator</div>
     </div>
-    <div class="header-rate">
-        EUR/HKD: <strong id="rate-display">9.1437</strong><br>Modello 04/2026
+    <div style="margin-left:auto;text-align:right;font-size:11px;color:rgba(255,255,255,0.3);">
+        EUR/HKD: <strong id="rateDisplay">9.1437</strong><br>Modello 04/2026
     </div>
 </div>
 
 <div class="container" id="app">
-    <!-- TABS -->
-    <div style="display:flex;gap:8px;margin-bottom:22px;">
-        <button class="btn-radio active" style="flex:1;text-align:center;" data-tab="FOOD" onclick="setTab('FOOD')">🍝 Food</button>
-        <button class="btn-radio" style="flex:1;text-align:center;" data-tab="WINE" onclick="setTab('WINE')">🍷 Beverage</button>
-        <button class="btn-radio" style="flex:1;text-align:center;" data-tab="MEAT" onclick="setTab('MEAT')">🥩 Meat/Fish</button>
+
+    <!-- UOM -->
+    <div class="box">
+        <div class="box-title">📐 Unità di Misura (UOM)</div>
+        <div class="btn-group">
+            <button class="btn active" data-uom="PCS" onclick="setUOM('PCS')">🔢 PCS</button>
+            <button class="btn" data-uom="BOX" onclick="setUOM('BOX')">📦 BOX</button>
+            <button class="btn" data-uom="KG" onclick="setUOM('KG')">⚖️ KG</button>
+        </div>
+        <div class="hint" id="uomHint">Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.</div>
     </div>
 
-    <!-- ROW 1 -->
+    <!-- Prezzo & Contenenza -->
     <div class="grid-2">
-        <div class="section">
-            <div class="section-title">📐 Unità di Misura (UOM)</div>
-            <div class="grid-3">
-                <button class="btn-uom active" data-uom="PCS" onclick="setUOM('PCS')"><span class="icon">🔢</span>PCS</button>
-                <button class="btn-uom" data-uom="BOX" onclick="setUOM('BOX')"><span class="icon">📦</span>BOX</button>
-                <button class="btn-uom" data-uom="KG" onclick="setUOM('KG')"><span class="icon">⚖️</span>KG</button>
+        <div class="box">
+            <div class="box-title">📦 Prezzo & Contenenza</div>
+            <div class="field">
+                <label id="priceLabel">Prezzo acquisto per PEZZO (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);font-style:italic;">(LISTINO FORNITORE)</span></label>
+                <input type="number" id="purchasePrice" placeholder="es. 2.50" step="any" oninput="onInputChange()">
             </div>
-            <div style="padding:8px 11px;background:rgba(196,135,59,0.06);border:1px solid rgba(196,135,59,0.2);border-radius:6px;font-size:10px;color:rgba(221,213,200,0.6);margin-top:10px;" id="uom-hint">
-                Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.
+            <div class="field" id="qtyField">
+                <label id="qtyLabel">Pezzi per cartone</label>
+                <input type="number" id="qtyPerBox" placeholder="es. 12" step="any" oninput="onInputChange()">
+            </div>
+            <div class="field">
+                <label id="boxLabel">Cartoni per pallet</label>
+                <input type="number" id="boxPerPallet" placeholder="es. 70" step="any" oninput="onInputChange()">
+                <div class="hint" id="divisorHint"></div>
+            </div>
+            <div class="field">
+                <label>Pallet per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span></label>
+                <input type="number" id="pltPerContainer" placeholder="25" step="any" oninput="onInputChange()">
+            </div>
+            <div class="field">
+                <label>Tasso di cambio EUR → HKD <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 9.1437)</span></label>
+                <input type="number" id="eurHkdRate" placeholder="9.1437" step="any" value="9.1437" oninput="onInputChange(); updateRate()">
             </div>
         </div>
-        <div class="section">
-            <div class="section-title">🏭 Gestione magazzino (Ubicazione)</div>
-            <div style="display:flex;flex-direction:column;gap:7px;">
-                <button class="btn-radio active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">🔄 MTO — Cross-docking</button>
-                <button class="btn-radio" data-ubic="FOR" onclick="setUbic('FOR')">🚛 FOR — Franco fornitore</button>
-                <button class="btn-radio" data-ubic="MTS" onclick="setUbic('MTS')">🏭 MTS — Magazzino Unifreddo</button>
-            </div>
-        </div>
-    </div>
 
-    <!-- ROW 2 -->
-    <div class="grid-2">
-        <div class="section">
-            <div class="section-title">📦 Prezzo & Contenenza</div>
-            <div class="field">
-                <label id="price-label">Prezzo acquisto per PEZZO (€) <span class="note">(LISTINO FORNITORE + INTERCOMPANY)</span></label>
-                <input type="number" id="purchase-price" placeholder="es. 2.50" step="any" oninput="onInputChange()">
-            </div>
-            <div class="field" id="qty-field">
-                <label id="qty-label">Pezzi per cartone</label>
-                <input type="number" id="qty-per-box" placeholder="es. 12" step="any" oninput="onInputChange()">
-            </div>
-            <div class="field">
-                <label id="box-label">Cartoni per pallet</label>
-                <input type="number" id="box-per-pallet" placeholder="es. 70" step="any" oninput="onInputChange()">
-                <div class="hint" id="divisor-hint"></div>
-            </div>
-            <div class="field">
-                <label id="plt-label">Pallet per container (default: 25)</label>
-                <input type="number" id="plt-per-container" placeholder="25" step="any" oninput="onInputChange()">
-                <div class="hint">Lascia vuoto per il default standard</div>
-            </div>
-            <div class="field">
-                <label>Tasso di cambio EUR → HKD (default: 9.1437)</label>
-                <input type="number" id="eur-hkd-rate" placeholder="9.1437" step="any" value="9.1437" oninput="onInputChange()">
-                <div class="hint" id="rate-hint">Lascia vuoto per usare il default 04/2026</div>
-            </div>
-        </div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="section">
-                <div class="section-title">🌡️ Temperatura</div>
+        <div>
+            <!-- Temperatura -->
+            <div class="box">
+                <div class="box-title">🌡️ Temperatura</div>
                 <div style="display:flex;flex-direction:column;gap:7px;">
-                    <button class="btn-radio active" data-temp="DRY" onclick="setTemp('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.15);color:#EEE;">🌾 Dry (Secco)</button>
-                    <button class="btn-radio" data-temp="FRESH" onclick="setTemp('FRESH')">❄️ Fresh (+15°C / +4°C)</button>
-                    <button class="btn-radio" data-temp="FROZEN" onclick="setTemp('FROZEN')">🧊 Frozen (−18°C)</button>
+                    <button class="btn active" data-temp="DRY" onclick="setTemp('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.15);color:#EEE;">🌾 Dry (Secco)</button>
+                    <button class="btn" data-temp="FRESH" onclick="setTemp('FRESH')">❄️ Fresh (+15°C / +4°C)</button>
+                    <button class="btn" data-temp="FROZEN" onclick="setTemp('FROZEN')">🧊 Frozen (−18°C)</button>
                 </div>
             </div>
-            <div class="section">
-                <div class="section-title">📍 Area fornitore</div>
-                <div style="display:flex;gap:7px;">
+
+            <!-- Area -->
+            <div class="box">
+                <div class="box-title">📍 Area fornitore</div>
+                <div class="btn-area-group">
                     <button class="btn-area active" data-area="NORD" onclick="setArea('NORD')">Nord</button>
                     <button class="btn-area" data-area="CENTRO" onclick="setArea('CENTRO')">Centro</button>
                     <button class="btn-area" data-area="SUD" onclick="setArea('SUD')">Sud</button>
                 </div>
-                <div class="warn" id="fob-warn"></div>
+                <div class="warn" id="fobWarn" style="display:none;"></div>
+            </div>
+
+            <!-- Opzioni -->
+            <div class="box">
+                <div class="box-title">⚙️ Voci opzionali</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+                    <div class="btn-option" id="certBtn" onclick="toggleCert()" style="text-align:center;">✅ Health Certificate</div>
+                    <div class="btn-option" id="alcBtn" onclick="toggleAlc()" style="text-align:center;">🍷 Tassa alcolici</div>
+                </div>
+                <div class="field hidden" id="alcTaxField" style="margin-top:10px;">
+                    <label>Tassa alcolici (€ / unità)</label>
+                    <input type="number" id="alcTaxPerUnit" placeholder="es. 1.50" step="any" oninput="onInputChange()">
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ROW 3 - Opzioni -->
-    <div class="section">
-        <div class="section-title">⚙️ Voci opzionali</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-            <div class="toggle" id="cert-toggle" onclick="toggleCert()">
-                <div><span class="check"></span>Health Certificate</div>
-                <div style="font-size:10px;color:rgba(221,213,200,0.4);padding-left:24px;">80 € / container</div>
-            </div>
-            <div class="toggle" id="alc-toggle" onclick="toggleAlc()">
-                <div><span class="check"></span>Tassa alcolici >30°</div>
-                <div style="font-size:10px;color:rgba(221,213,200,0.4);padding-left:24px;">Solo superalcolici</div>
-            </div>
-        </div>
-        <div class="field hidden" id="alc-tax-field" style="margin-top:10px;max-width:280px;">
-            <label id="alc-tax-label">Tassa alcolici (€ / unità)</label>
-            <input type="number" id="alc-tax-per-unit" placeholder="es. 1.50" step="any" oninput="onInputChange()">
-        </div>
-    </div>
+    <!-- CALCOLA -->
+    <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled>Completa i campi per calcolare</button>
 
-    <!-- CALCULATE BUTTON -->
-    <button class="calc-btn" id="calc-btn" onclick="calculate()" disabled style="background:linear-gradient(135deg,#C4873B,#1A4060);">Completa i campi per calcolare</button>
-
-    <!-- RESULTS -->
-    <div id="results" style="display:none;margin-top:28px;">
+    <!-- RISULTATI -->
+    <div id="results" style="display:none;margin-top:20px;">
         <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost 2</div>
-        <div class="result-big" id="result-big"></div>
-        <div class="result-card" id="result-detail"></div>
-        <div id="cost-bar"></div>
         
-        <!-- PVP Section -->
-        <div class="pvp-section" id="pvp-section">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" id="bigResults">
+            <div class="result-card" style="border-color:rgba(196,135,59,0.3);">
+                <div class="label">Standard Cost 2</div>
+                <div class="sub">EURO · per unità</div>
+                <div class="value" id="resultEur">€ 0.00</div>
+            </div>
+            <div class="result-card" style="border-color:rgba(74,155,155,0.3);">
+                <div class="label">Standard Cost 2</div>
+                <div class="sub">HKD · per unità</div>
+                <div class="value" style="color:#4A9B9B;" id="resultHkd">HK$ 0.00</div>
+            </div>
+        </div>
+
+        <div class="box" id="detailBox">
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;">DETTAGLIO COSTI · per unità</div>
+            <div id="detailRows"></div>
+        </div>
+
+        <!-- PVP -->
+        <div class="pvp-section">
             <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;">💰 Prezzo di Vendita & Margine</div>
             <div class="pvp-grid">
                 <div class="pvp-field">
                     <label>Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
-                    <input type="number" id="pvp-eur" placeholder="es. 5.00" step="any" oninput="updateMargins()">
-                    <div class="margin-box" id="margin-eur-box">
+                    <input type="number" id="pvpEur" placeholder="es. 5.00" step="any" oninput="calcMargin()">
+                    <div class="margin-box">
                         <span>Margine %</span>
-                        <span class="pct" id="margin-eur-pct">—</span>
+                        <span class="pct" id="marginEurPct">—</span>
                     </div>
-                    <div class="margin-detail" id="margin-eur-detail"></div>
+                    <div class="margin-detail" id="marginEurDetail" style="color:rgba(221,213,200,0.35);"></div>
                 </div>
                 <div class="pvp-field">
                     <label>Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
-                    <input type="number" id="pvp-hkd" placeholder="es. 45.00" step="any" oninput="updateMargins()">
-                    <div class="margin-box" id="margin-hkd-box">
+                    <input type="number" id="pvpHgk" placeholder="es. 45.00" step="any" oninput="calcMargin()">
+                    <div class="margin-box">
                         <span>Margine %</span>
-                        <span class="pct" id="margin-hkd-pct">—</span>
+                        <span class="pct" id="marginHgkPct">—</span>
                     </div>
-                    <div class="margin-detail" id="margin-hkd-detail"></div>
+                    <div class="margin-detail" id="marginHgkDetail" style="color:rgba(221,213,200,0.35);"></div>
                 </div>
             </div>
             <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;">💡 Inserisci il prezzo di vendita per calcolare il margine. I campi EUR e HKD sono collegati automaticamente.</div>
@@ -235,19 +196,26 @@
 
         <div class="disclaimer">⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.</div>
     </div>
+
 </div>
 
 <script>
-// ============================================================
-// STANDARD COST CALCULATOR HK - VERSIONE VANILLA JS
-// ============================================================
+// ─── STATO ──────────────────────────────────────────────────────
+const state = {
+    uom: 'PCS',
+    temperature: 'DRY',
+    area: 'NORD',
+    hasCert: false,
+    hasAlcTax: false,
+    lastResult: null,
+};
 
-// ─── COST CONSTANTS ────────────────────────────────────────────
+// ─── COSTANTI ──────────────────────────────────────────────────
 const C = {
     EUR_TO_HKD: 9.1437,
     FOB: {
-        DRY:    { NORD: 2000, CENTRO: 0, SUD: 1108.55 },
-        FRESH:  { NORD: 3500, CENTRO: 3500, SUD: 0 },
+        DRY: { NORD: 2000, CENTRO: 0, SUD: 1108.55 },
+        FRESH: { NORD: 3500, CENTRO: 3500, SUD: 0 },
         FROZEN: { NORD: 4000, CENTRO: 0, SUD: 0 },
     },
     LIC_PER_CONTAINER: 863.9828515808698,
@@ -255,50 +223,26 @@ const C = {
     HC_PER_CONTAINER: 80,
     PALLET_COST: 30,
     MTO_PER_PLT: { DRY: 8.16, FRESH: 10.2, FROZEN: 12.24 },
-    MTS: {
-        DEPOSITO: { DRY: 14.4228, FRESH: 16.4832, FROZEN: 24.7248 },
-        INBOUND:  { DRY: 2.5755, FRESH: 3.6057, FROZEN: 3.6057 },
-        PICKING:  { DRY: 0.303, FRESH: 0.3434, FROZEN: 0.3535 },
-    },
     DEFAULT_PLT: { DRY: 25, FRESH: 23, FROZEN: 23 },
 };
 
-// ─── STATE ──────────────────────────────────────────────────────
-const state = {
-    tab: 'FOOD',
-    uom: 'PCS',
-    ubicazione: 'MTO',
-    temperature: 'DRY',
-    area: 'NORD',
-    hasCert: false,
-    hasAlcTax: false,
-    result: null,
-};
-
-// ─── DOM REFS ──────────────────────────────────────────────────
-const $ = id => document.getElementById(id);
-
-// ─── UI FUNCTIONS ──────────────────────────────────────────────
-function setTab(tab) {
-    state.tab = tab;
-    document.querySelectorAll('[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
-    clearResults();
-}
+// ─── FUNZIONI UI ───────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
 
 function setUOM(uom) {
     state.uom = uom;
-    document.querySelectorAll('.btn-uom').forEach(el => el.classList.toggle('active', el.dataset.uom === uom));
-    updateUOMFields();
+    document.querySelectorAll('[data-uom]').forEach(el => el.classList.toggle('active', el.dataset.uom === uom));
+    updateUOM();
     clearResults();
 }
 
-function updateUOMFields() {
+function updateUOM() {
     const uom = state.uom;
-    const qtyField = $('qty-field');
-    const qtyLabel = $('qty-label');
-    const priceLabel = $('price-label');
-    const boxLabel = $('box-label');
-    const hint = $('uom-hint');
+    const qtyField = $('qtyField');
+    const priceLabel = $('priceLabel');
+    const qtyLabel = $('qtyLabel');
+    const boxLabel = $('boxLabel');
+    const hint = $('uomHint');
     
     if (uom === 'BOX') {
         qtyField.style.display = 'none';
@@ -323,9 +267,9 @@ function updateUOMFields() {
 
 function updateDivisorHint() {
     const uom = state.uom;
-    const qty = parseFloat($('qty-per-box').value) || 0;
-    const box = parseFloat($('box-per-pallet').value) || 0;
-    const hint = $('divisor-hint');
+    const qty = parseFloat($('qtyPerBox').value) || 0;
+    const box = parseFloat($('boxPerPallet').value) || 0;
+    const hint = $('divisorHint');
     if (uom === 'BOX') {
         hint.textContent = box ? `→ ${box} box / pallet` : '';
     } else {
@@ -333,28 +277,11 @@ function updateDivisorHint() {
     }
 }
 
-function setUbic(ubic) {
-    state.ubicazione = ubic;
-    document.querySelectorAll('[data-ubic]').forEach(el => {
-        el.classList.toggle('active', el.dataset.ubic === ubic);
-        if (el.dataset.ubic === ubic) {
-            el.style.borderColor = ubic === 'MTO' ? '#4A8C9B' : ubic === 'FOR' ? '#6A9B4A' : '#C4873B';
-            el.style.background = (ubic === 'MTO' ? 'rgba(74,140,155,0.15)' : ubic === 'FOR' ? 'rgba(106,155,74,0.15)' : 'rgba(196,135,59,0.15)');
-            el.style.color = '#EEE';
-        } else {
-            el.style.borderColor = 'rgba(255,255,255,0.09)';
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.color = 'rgba(221,213,200,0.6)';
-        }
-    });
-    clearResults();
-}
-
 function setTemp(temp) {
     state.temperature = temp;
     document.querySelectorAll('[data-temp]').forEach(el => {
-        const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
         el.classList.toggle('active', el.dataset.temp === temp);
+        const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
         if (el.dataset.temp === temp) {
             el.style.borderColor = colors[temp];
             el.style.background = colors[temp] + '22';
@@ -379,7 +306,7 @@ function setArea(area) {
 function updateFobWarn() {
     const temp = state.temperature;
     const area = state.area;
-    const warn = $('fob-warn');
+    const warn = $('fobWarn');
     let msg = '';
     if (temp === 'DRY' && area === 'CENTRO') msg = '⚠️ DRY da Centro: FOB = 0 nel modello';
     else if (temp === 'FRESH' && area === 'SUD') msg = '⚠️ Fresh da Sud: FOB = 0 nel modello';
@@ -390,15 +317,26 @@ function updateFobWarn() {
 
 function toggleCert() {
     state.hasCert = !state.hasCert;
-    $('cert-toggle').classList.toggle('active', state.hasCert);
+    const btn = $('certBtn');
+    btn.classList.toggle('active', state.hasCert);
+    btn.style.borderColor = state.hasCert ? '#4A9B6C' : 'rgba(255,255,255,0.09)';
+    btn.style.background = state.hasCert ? 'rgba(74,155,108,0.15)' : 'rgba(255,255,255,0.04)';
     clearResults();
 }
 
 function toggleAlc() {
     state.hasAlcTax = !state.hasAlcTax;
-    $('alc-toggle').classList.toggle('active', state.hasAlcTax);
-    $('alc-tax-field').classList.toggle('hidden', !state.hasAlcTax);
+    const btn = $('alcBtn');
+    btn.classList.toggle('active', state.hasAlcTax);
+    btn.style.borderColor = state.hasAlcTax ? '#9B4A6C' : 'rgba(255,255,255,0.09)';
+    btn.style.background = state.hasAlcTax ? 'rgba(155,74,108,0.15)' : 'rgba(255,255,255,0.04)';
+    $('alcTaxField').classList.toggle('hidden', !state.hasAlcTax);
     clearResults();
+}
+
+function updateRate() {
+    const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
+    $('rateDisplay').textContent = rate.toFixed(4);
 }
 
 function onInputChange() {
@@ -409,29 +347,29 @@ function onInputChange() {
 
 function clearResults() {
     $('results').style.display = 'none';
-    state.result = null;
+    state.lastResult = null;
     checkCanCalc();
 }
 
 function checkCanCalc() {
-    const price = parseFloat($('purchase-price').value);
-    const box = parseFloat($('box-per-pallet').value);
-    const qty = parseFloat($('qty-per-box').value) || 1;
-    const btn = $('calc-btn');
+    const price = parseFloat($('purchasePrice').value);
+    const box = parseFloat($('boxPerPallet').value);
+    const qty = parseFloat($('qtyPerBox').value) || 1;
+    const btn = $('calcBtn');
     const can = price > 0 && box > 0 && (state.uom === 'BOX' || qty > 0);
     btn.disabled = !can;
     btn.textContent = can ? '✦  CALCOLA STANDARD COST' : 'Completa i campi per calcolare';
 }
 
-// ─── CALCULATION ──────────────────────────────────────────────
+// ─── CALCOLO ────────────────────────────────────────────────────
 function calculate() {
-    const price = parseFloat($('purchase-price').value);
-    const qty = parseFloat($('qty-per-box').value) || 1;
-    const box = parseFloat($('box-per-pallet').value);
-    const plt = parseFloat($('plt-per-container').value) || C.DEFAULT_PLT[state.temperature] || 25;
-    const rate = parseFloat($('eur-hkd-rate').value) || C.EUR_TO_HKD;
+    const price = parseFloat($('purchasePrice').value);
+    const qty = parseFloat($('qtyPerBox').value) || 1;
+    const box = parseFloat($('boxPerPallet').value);
+    const plt = parseFloat($('pltPerContainer').value) || C.DEFAULT_PLT[state.temperature] || 25;
+    const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
     const uom = state.uom;
-    
+
     const unitsPerPlt = uom === 'BOX' ? box : qty * box;
     const totalUnits = unitsPerPlt * plt;
     if (!totalUnits || !price) return;
@@ -443,27 +381,13 @@ function calculate() {
     const vgmPerUnit = C.VGM_PER_CONTAINER / totalUnits;
     const hcPerUnit = state.hasCert ? C.HC_PER_CONTAINER / totalUnits : 0;
     const palletPerUnit = C.PALLET_COST / unitsPerPlt;
-    const alcPerUnit = state.hasAlcTax ? (parseFloat($('alc-tax-per-unit').value) || 0) : 0;
+    const alcPerUnit = state.hasAlcTax ? (parseFloat($('alcTaxPerUnit').value) || 0) : 0;
 
     const step1Eur = price + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
     const step1Hkd = step1Eur * rate;
 
-    // Warehouse
-    let warehousePerUnit = 0;
-    let wd = null;
-    if (state.ubicazione === 'MTO') {
-        warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
-        wd = { type: 'MTO', total: warehousePerUnit };
-    } else if (state.ubicazione === 'MTS') {
-        const dep = (C.MTS.DEPOSITO[state.temperature] || 14.4228) / unitsPerPlt;
-        const inbound = (C.MTS.INBOUND[state.temperature] || 2.5755) / unitsPerPlt;
-        const pickDiv = uom === 'BOX' ? 1 : qty;
-        const picking = (C.MTS.PICKING[state.temperature] || 0.303) / pickDiv;
-        warehousePerUnit = dep + inbound + picking;
-        wd = { type: 'MTS', dep, inbound, picking, total: warehousePerUnit };
-    } else {
-        wd = { type: 'FOR', total: 0 };
-    }
+    // Warehouse - MTO
+    const warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
 
     const step2Eur = step1Eur + warehousePerUnit;
     const step2Hkd = step2Eur * rate;
@@ -472,198 +396,100 @@ function calculate() {
         purchaseEur: price,
         purchaseHkd: price * rate,
         fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
+        warehousePerUnit,
         step1Eur, step1Hkd, step2Eur, step2Hkd,
-        warehouseDetail: wd,
         uomLabel: uom,
-        fobPct: fobPerUnit / step2Eur * 100,
-        licPct: licPerUnit / step2Eur * 100,
-        palletPct: palletPerUnit / step2Eur * 100,
         rate,
     };
 
-    state.result = result;
+    state.lastResult = result;
     renderResults(result);
 }
 
-// ─── RENDER RESULTS ────────────────────────────────────────────
+// ─── RENDER ─────────────────────────────────────────────────────
 function renderResults(r) {
-    const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
-    const accent = colors[state.temperature] || '#C4873B';
     const uom = r.uomLabel;
-    const ubicLabels = { MTO: 'MTO — Cross-docking', FOR: 'FOR — Franco fornitore', MTS: 'MTS — Magazzino Unifreddo' };
+    $('resultEur').textContent = '€ ' + r.step2Eur.toFixed(2);
+    $('resultHkd').textContent = 'HK$ ' + r.step2Hkd.toFixed(2);
 
-    // Big results
-    $('result-big').innerHTML = `
-        <div class="result-box" style="border-color:${accent}44;background:linear-gradient(135deg,${accent}18,rgba(0,0,0,0.3));">
-            <div class="label">Standard Cost 2</div>
-            <div class="sub">EURO · per ${uom}</div>
-            <div class="value" style="color:${accent};">€ ${r.step2Eur.toFixed(2)}</div>
-        </div>
-        <div class="result-box" style="border-color:#4A9B9B44;background:linear-gradient(135deg,rgba(74,155,155,0.12),rgba(0,0,0,0.3));">
-            <div class="label">Standard Cost 2</div>
-            <div class="sub">HKD · per ${uom}</div>
-            <div class="value" style="color:#4A9B9B;">HK$ ${r.step2Hkd.toFixed(2)}</div>
-        </div>
+    // Dettaglio
+    let rows = `
+        <div class="cost-row bold">Prezzo acquisto <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
+        <div class="divider"></div>
+        <div class="cost-row">FOB + Nolo <span>€ ${r.fobPerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">Local Import Charges <span>€ ${r.licPerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">VGM Charges <span>€ ${r.vgmPerUnit.toFixed(4)}</span></div>
+        ${r.hcPerUnit > 0 ? `<div class="cost-row">Health Certificate <span>€ ${r.hcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="cost-row">Costo pallet <span>€ ${r.palletPerUnit.toFixed(4)}</span></div>
+        ${r.alcPerUnit > 0 ? `<div class="cost-row">Tassa alcolici <span>€ ${r.alcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="divider"></div>
+        <div class="cost-row bold">→ Standard Cost Step 1 <span>€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
+        <div class="divider"></div>
+        <div class="cost-row">🔄 MTO — In+Stock+Out <span>€ ${r.warehousePerUnit.toFixed(4)}</span></div>
+        <div class="divider"></div>
+        <div class="cost-row bold highlight" style="color:#C4873B;">→ Standard Cost Step 2 <span>€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
     `;
+    $('detailRows').innerHTML = rows;
 
-    // Detail rows
-    const wd = r.warehouseDetail;
-    let whRows = '';
-    if (wd.type === 'MTO') {
-        whRows = `<div class="cost-row">🔄 MTO — In+Stock+Out <span class="mono">€ ${wd.total.toFixed(4)}</span></div>`;
-    } else if (wd.type === 'FOR') {
-        whRows = `<div style="font-size:11px;color:rgba(106,155,74,0.75);padding:4px 0;font-style:italic;">🚛 FOR — Nessun costo di handling aggiunto</div>`;
-    } else if (wd.type === 'MTS') {
-        whRows = `
-            <div class="cost-row">🏭 MTS — Deposito <span class="mono">€ ${wd.dep.toFixed(4)}</span></div>
-            <div class="cost-row">🏭 MTS — Inbound <span class="mono">€ ${wd.inbound.toFixed(4)}</span></div>
-            <div class="cost-row">🏭 MTS — Picking <span class="mono">€ ${wd.picking.toFixed(4)}</span></div>
-        `;
-    }
-
-    $('result-detail').innerHTML = `
-        <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;">DETTAGLIO COSTI · per ${uom} · ${ubicLabels[state.ubicazione] || ''}</div>
-        <div class="cost-row bold" style="color:#DDD5C8;">Prezzo acquisto <span class="mono">€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
-        <div class="divider"></div>
-        <div class="cost-row">FOB + Nolo <span class="mono">€ ${r.fobPerUnit.toFixed(4)} (${r.fobPct.toFixed(1)}%)</span></div>
-        <div class="cost-row">Local Import Charges <span class="mono">€ ${r.licPerUnit.toFixed(4)} (${r.licPct.toFixed(1)}%)</span></div>
-        <div class="cost-row">VGM Charges <span class="mono">€ ${r.vgmPerUnit.toFixed(4)}</span></div>
-        ${r.hcPerUnit > 0 ? `<div class="cost-row">Health Certificate <span class="mono">€ ${r.hcPerUnit.toFixed(4)}</span></div>` : ''}
-        <div class="cost-row">Costo pallet <span class="mono">€ ${r.palletPerUnit.toFixed(4)} (${r.palletPct.toFixed(1)}%)</span></div>
-        ${r.alcPerUnit > 0 ? `<div class="cost-row">Tassa alcolici <span class="mono">€ ${r.alcPerUnit.toFixed(4)}</span></div>` : ''}
-        <div class="divider"></div>
-        <div class="cost-row bold">→ Standard Cost Step 1 <span class="mono">€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
-        <div class="divider"></div>
-        ${whRows}
-        <div class="divider"></div>
-        <div class="cost-row bold" style="color:${accent};">→ Standard Cost Step 2 <span class="mono">€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
-    `;
-
-    // Cost bar
-    const items = [
-        { label: 'Acquisto', value: r.purchaseEur, color: accent },
-        { label: 'FOB+Nolo', value: r.fobPerUnit, color: '#4A8C9B' },
-        { label: 'LIC+VGM', value: r.licPerUnit + r.vgmPerUnit, color: '#9B7A4A' },
-        { label: 'Pallet', value: r.palletPerUnit, color: '#6A9B4A' },
-    ];
-    if (wd.type === 'MTO') items.push({ label: 'MTO', value: wd.total, color: '#4A8C5B' });
-    if (wd.type === 'MTS') {
-        items.push({ label: 'Dep', value: wd.dep, color: '#C4873B' });
-        items.push({ label: 'In', value: wd.inbound, color: '#B37030' });
-        items.push({ label: 'Pick', value: wd.picking, color: '#A26020' });
-    }
-    if (r.alcPerUnit > 0) items.push({ label: 'Alc', value: r.alcPerUnit, color: '#9B4A6C' });
-    if (r.hcPerUnit > 0) items.push({ label: 'HC', value: r.hcPerUnit, color: '#4A9B6C' });
-    
-    const total = r.step2Eur;
-    let barHtml = items.map(it => `<div style="flex:${it.value/total};background:${it.color};opacity:0.85;"></div>`).join('');
-    let legendHtml = items.map(it => `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(221,213,200,0.55);"><div style="width:8px;height:8px;background:${it.color};border-radius:2px;opacity:0.85;"></div>${it.label} (${(it.value/total*100).toFixed(1)}%)</div>`).join('');
-
-    $('cost-bar').innerHTML = `
-        <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.4);margin-bottom:10px;">COMPOSIZIONE DEL COSTO</div>
-            <div style="display:flex;height:11px;border-radius:6px;overflow:hidden;margin-bottom:10px;">${barHtml}</div>
-            <div style="display:flex;flex-wrap:wrap;gap:10px;">${legendHtml}</div>
-        </div>
-    `;
-
-    // Show results and PVP
     $('results').style.display = 'block';
-    $('pvp-section').style.display = 'block';
     
-    // Reset PVP fields
-    $('pvp-eur').value = '';
-    $('pvp-hkd').value = '';
-    $('margin-eur-pct').textContent = '—';
-    $('margin-eur-pct').className = 'pct';
-    $('margin-hkd-pct').textContent = '—';
-    $('margin-hkd-pct').className = 'pct';
-    $('margin-eur-detail').textContent = '';
-    $('margin-hkd-detail').textContent = '';
+    // Reset PVP
+    $('pvpEur').value = '';
+    $('pvpHgk').value = '';
+    $('marginEurPct').textContent = '—';
+    $('marginEurPct').className = 'pct';
+    $('marginHgkPct').textContent = '—';
+    $('marginHgkPct').className = 'pct';
+    $('marginEurDetail').textContent = '';
+    $('marginHgkDetail').textContent = '';
 }
 
-// ─── PVP & MARGIN ──────────────────────────────────────────────
-function updateMargins() {
-    const r = state.result;
+// ─── MARGINE ────────────────────────────────────────────────────
+function calcMargin() {
+    const r = state.lastResult;
     if (!r) return;
 
-    const rate = parseFloat($('eur-hkd-rate').value) || C.EUR_TO_HKD;
-    const pvpEur = parseFloat($('pvp-eur').value);
-    const pvpHkd = parseFloat($('pvp-hkd').value);
+    const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
+    const pvpEur = parseFloat($('pvpEur').value);
+    const pvpHkd = parseFloat($('pvpHgk').value);
 
-    // Sync EUR -> HKD
-    if (pvpEur && pvpEur > 0) {
+    // Sincronizza
+    if (pvpEur > 0) {
         const hkd = pvpEur * rate;
-        $('pvp-hkd').value = hkd.toFixed(2);
-        updateMargin('eur', pvpEur, r.step2Eur);
-        updateMargin('hkd', hkd, r.step2Hkd);
-    } else if (pvpHkd && pvpHkd > 0) {
+        $('pvpHgk').value = hkd.toFixed(2);
+        updateMargin('Eur', pvpEur, r.step2Eur);
+    } else if (pvpHkd > 0) {
         const eur = pvpHkd / rate;
-        $('pvp-eur').value = eur.toFixed(4);
-        updateMargin('hkd', pvpHkd, r.step2Hkd);
-        updateMargin('eur', eur, r.step2Eur);
+        $('pvpEur').value = eur.toFixed(4);
+        updateMargin('Hgk', pvpHkd, r.step2Hkd);
     } else {
-        // Clear if empty
-        if (!pvpEur) {
-            $('margin-eur-pct').textContent = '—';
-            $('margin-eur-pct').className = 'pct';
-            $('margin-eur-detail').textContent = '';
-        }
-        if (!pvpHkd) {
-            $('margin-hkd-pct').textContent = '—';
-            $('margin-hkd-pct').className = 'pct';
-            $('margin-hkd-detail').textContent = '';
-        }
+        $('marginEurPct').textContent = '—';
+        $('marginEurPct').className = 'pct';
+        $('marginHgkPct').textContent = '—';
+        $('marginHgkPct').className = 'pct';
+        $('marginEurDetail').textContent = '';
+        $('marginHgkDetail').textContent = '';
     }
 }
 
-function updateMargin(currency, pvp, cost) {
-    const pctEl = $(`margin-${currency}-pct`);
-    const detailEl = $(`margin-${currency}-detail`);
+function updateMargin(suffix, pvp, cost) {
+    const pctEl = $('margin' + suffix + 'Pct');
+    const detailEl = $('margin' + suffix + 'Detail');
     const margin = ((pvp - cost) / pvp) * 100;
     pctEl.textContent = margin.toFixed(1) + '%';
     pctEl.className = 'pct ' + (margin >= 0 ? 'positive' : 'negative');
-    const absMargin = pvp - cost;
-    const symbol = currency === 'eur' ? '€' : 'HK$';
+    const abs = pvp - cost;
+    const symbol = suffix === 'Eur' ? '€' : 'HK$';
     detailEl.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + 
-        `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${absMargin.toFixed(2)} / unità`;
-    detailEl.className = 'margin-detail' + (margin < 0 ? ' negative' : '');
+        `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${abs.toFixed(2)} / unità`;
+    detailEl.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
 }
 
 // ─── INIT ──────────────────────────────────────────────────────
-// Set initial state
-document.querySelector('[data-uom="PCS"]').classList.add('active');
-document.querySelector('[data-ubic="MTO"]').classList.add('active');
-document.querySelector('[data-temp="DRY"]').classList.add('active');
-document.querySelector('[data-area="NORD"]').classList.add('active');
-
-// Initial check
-checkCanCalc();
-
-// Rate hint
-$('eur-hkd-rate').addEventListener('input', function() {
-    const hint = $('rate-hint');
-    const val = parseFloat(this.value);
-    if (val && val !== C.EUR_TO_HKD) {
-        hint.textContent = `→ usando ${val.toFixed(4)}`;
-        hint.style.color = '#E8C97A';
-    } else {
-        hint.textContent = 'Lascia vuoto per usare il default 04/2026';
-        hint.style.color = 'rgba(196,135,59,0.6)';
-    }
-    // Update rate display in header
-    $('rate-display').textContent = (val || C.EUR_TO_HKD).toFixed(4);
-    clearResults();
-});
-
-// Listen for Enter key on inputs
-document.querySelectorAll('input').forEach(el => {
-    el.addEventListener('keydown', e => {
-        if (e.key === 'Enter') {
-            const btn = $('calc-btn');
-            if (!btn.disabled) calculate();
-        }
-    });
+document.addEventListener('DOMContentLoaded', function() {
+    updateUOM();
+    checkCanCalc();
+    updateRate();
 });
 </script>
 </body>
