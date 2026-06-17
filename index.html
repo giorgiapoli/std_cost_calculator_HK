@@ -16,10 +16,10 @@
     <div id="root"></div>
     <script type="text/babel">
         // ============================================================
-        // STANDARD COST CALCULATOR HK - VERSIONE COMPLETA
+        // STANDARD COST CALCULATOR HK - VERSIONE CON PVP E MARGINE
         // ============================================================
 
-        const { useState, useCallback } = React;
+        const { useState, useCallback, useEffect } = React;
 
         // ─── COST CONSTANTS (COSTS LOG sheet, 04/2026) ───────────────────────────────
         const C = {
@@ -96,13 +96,6 @@
           MTS: { label: "MTS — Magazzino Unifreddo", icon: "🏭", sublabel: "Stoccato a Unifreddo", desc: "Costi Deposito + Inbound + Picking applicati", color: "#C4873B" },
         };
 
-        // ─── PRICE TYPE ──────────────────────────────────────────────────────────────
-        // const PRICE_TYPE_CONFIG = {
-        //   DAP_FOR: { label: "DAP / FOR", icon: "📋", sublabel: "Prezzo incluso trasporto", desc: "Delivered at Place — il fornitore porta la merce", color: "#4A9B6C" },
-        //   FCA: { label: "FCA", icon: "🏗️", sublabel: "Free Carrier", desc: "Il prezzo non include il trasporto. Aggiungere costo carriage", color: "#9B7A4A" },
-        //   MTS_PRICE: { label: "MTS (con IC)", icon: "🔗", sublabel: "Prezzo intercompany", desc: "Prezzo con maggiorazione IC (1%)", color: "#7B4AC4" },
-        // };
-
         const TEMP_OPTIONS = [
           { value: "DRY",    label: "🌾 Dry (Secco)",           color: "#C4873B" },
           { value: "FRESH",  label: "❄️ Fresh (+15°C / +4°C)",   color: "#3B8DC4" },
@@ -177,7 +170,7 @@
           purchaseEur: "", qtyPerBox: "", boxPerPallet: "",
           uom: "PCS", temperature: "DRY", area: "NORD",
           pltPerContainer: "", eurToHkd: "",
-          ubicazione: "MTO", priceType: "DAP_FOR",
+          ubicazione: "MTO",
           hasCert: false, hasAlcTax: false, alcTaxPerUnit: "",
         };
 
@@ -272,6 +265,189 @@
           );
         };
 
+        // ─── PVP SECTION ─────────────────────────────────────────────────────────────
+        const PvpSection = ({ costEur, costHkd, uom, accentClr }) => {
+          const [pvpEur, setPvpEur] = useState("");
+          const [pvpHkd, setPvpHkd] = useState("");
+          const [marginEur, setMarginEur] = useState(null);
+          const [marginHkd, setMarginHkd] = useState(null);
+
+          const calculateMargin = (pvp, cost) => {
+            if (!pvp || pvp <= 0 || !cost) return null;
+            return ((pvp - cost) / pvp) * 100;
+          };
+
+          const handlePvpEurChange = (value) => {
+            setPvpEur(value);
+            const pvp = parseFloat(value);
+            if (pvp && pvp > 0 && costEur) {
+              const m = calculateMargin(pvp, costEur);
+              setMarginEur(m);
+              // Auto-calculate HKD equivalent
+              const rate = parseFloat(document.querySelector('input[placeholder*="EUR → HKD"]')?.value) || DEFAULT_EUR_HKD;
+              setPvpHkd((pvp * rate).toString());
+            } else {
+              setMarginEur(null);
+            }
+          };
+
+          const handlePvpHkdChange = (value) => {
+            setPvpHkd(value);
+            const pvp = parseFloat(value);
+            if (pvp && pvp > 0 && costHkd) {
+              const m = calculateMargin(pvp, costHkd);
+              setMarginHkd(m);
+              // Auto-calculate EUR equivalent
+              const rate = parseFloat(document.querySelector('input[placeholder*="EUR → HKD"]')?.value) || DEFAULT_EUR_HKD;
+              setPvpEur((pvp / rate).toString());
+            } else {
+              setMarginHkd(null);
+            }
+          };
+
+          const formatMargin = (margin) => {
+            if (margin === null || margin === undefined) return "—";
+            return margin.toFixed(1) + "%";
+          };
+
+          const getMarginColor = (margin) => {
+            if (margin === null) return "rgba(221,213,200,0.5)";
+            return margin >= 0 ? "#4A9B6C" : "#B5534A";
+          };
+
+          return (
+            <div style={{ 
+              marginTop: "20px", 
+              padding: "20px", 
+              background: "rgba(196,135,59,0.06)", 
+              border: "1px solid rgba(196,135,59,0.2)", 
+              borderRadius: "10px" 
+            }}>
+              <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(196,135,59,0.75)", textTransform: "uppercase", marginBottom: "12px" }}>
+                💰 Prezzo di Vendita & Margine
+              </div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
+                {/* EUR */}
+                <div style={{ background: "rgba(255,255,255,0.04)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "6px" }}>
+                    Prezzo di Vendita (€) <span style={{ fontSize: "9px", color: "rgba(196,135,59,0.6)" }}>per {uom}</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    placeholder="es. 5.00" 
+                    value={pvpEur} 
+                    onChange={e => handlePvpEurChange(e.target.value)} 
+                    step="any"
+                    style={{ 
+                      width: "100%", 
+                      padding: "10px 12px", 
+                      background: "rgba(255,255,255,0.06)", 
+                      border: "1px solid rgba(255,255,255,0.1)", 
+                      borderRadius: "7px", 
+                      color: "#DDD5C8", 
+                      fontSize: "14px", 
+                      fontFamily: "inherit", 
+                      outline: "none", 
+                      boxSizing: "border-box" 
+                    }} 
+                  />
+                  <div style={{ 
+                    marginTop: "10px", 
+                    padding: "10px 12px", 
+                    background: `rgba(74,155,108,0.1)`, 
+                    border: `1px solid ${getMarginColor(marginEur)}44`, 
+                    borderRadius: "6px", 
+                    display: "flex", 
+                    justifyContent: "space-between", 
+                    alignItems: "center",
+                    fontSize: "13px",
+                    color: "#DDD5C8"
+                  }}>
+                    <span>Margine %</span>
+                    <span style={{ 
+                      fontWeight: "bold", 
+                      fontSize: "20px", 
+                      color: getMarginColor(marginEur)
+                    }}>
+                      {formatMargin(marginEur)}
+                    </span>
+                  </div>
+                  {marginEur !== null && marginEur >= 0 && (
+                    <div style={{ marginTop: "6px", fontSize: "10px", color: "rgba(221,213,200,0.35)" }}>
+                      ✅ Margine positivo: € {(parseFloat(pvpEur) - costEur).toFixed(2)} / {uom}
+                    </div>
+                  )}
+                  {marginEur !== null && marginEur < 0 && (
+                    <div style={{ marginTop: "6px", fontSize: "10px", color: "#B5534A" }}>
+                      ⚠️ Margine negativo: € {(parseFloat(pvpEur) - costEur).toFixed(2)} / {uom}
+                    </div>
+                  )}
+                </div>
+
+                {/* HKD */}
+                <div style={{ background: "rgba(255,255,255,0.04)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
+                  <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "6px" }}>
+                    Prezzo di Vendita (HK$) <span style={{ fontSize: "9px", color: "rgba(196,135,59,0.6)" }}>per {uom}</span>
+                  </label>
+                  <input 
+                    type="number" 
+                    placeholder="es. 45.00" 
+                    value={pvpHkd} 
+                    onChange={e => handlePvpHkdChange(e.target.value)} 
+                    step="any"
+                    style={{ 
+                      width: "100%", 
+                      padding: "10px 12px", 
+                      background: "rgba(255,255,255,0.06)", 
+                      border: "1px solid rgba(255,255,255,0.1)", 
+                      borderRadius: "7px", 
+                      color: "#DDD5C8", 
+                      fontSize: "14px", 
+                      fontFamily: "inherit", 
+                      outline: "none", 
+                      boxSizing: "border-box" 
+                    }} 
+                  />
+                  <div style={{ 
+                    marginTop: "10px", 
+                    padding: "10px 12px", 
+                    background: `rgba(74,155,108,0.1)`, 
+                    border: `1px solid ${getMarginColor(marginHkd)}44`, 
+                    borderRadius: "6px", 
+                    display: "flex", 
+                    justifyContent: "space-between", 
+                    alignItems: "center",
+                    fontSize: "13px",
+                    color: "#DDD5C8"
+                  }}>
+                    <span>Margine %</span>
+                    <span style={{ 
+                      fontWeight: "bold", 
+                      fontSize: "20px", 
+                      color: getMarginColor(marginHkd)
+                    }}>
+                      {formatMargin(marginHkd)}
+                    </span>
+                  </div>
+                  {marginHkd !== null && marginHkd >= 0 && (
+                    <div style={{ marginTop: "6px", fontSize: "10px", color: "rgba(221,213,200,0.35)" }}>
+                      ✅ Margine positivo: HK$ {(parseFloat(pvpHkd) - costHkd).toFixed(2)} / {uom}
+                    </div>
+                  )}
+                  {marginHkd !== null && marginHkd < 0 && (
+                    <div style={{ marginTop: "6px", fontSize: "10px", color: "#B5534A" }}>
+                      ⚠️ Margine negativo: HK$ {(parseFloat(pvpHkd) - costHkd).toFixed(2)} / {uom}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ marginTop: "10px", fontSize: "10px", color: "rgba(221,213,200,0.3)", textAlign: "center" }}>
+                💡 Inserisci il prezzo di vendita per calcolare il margine. I campi EUR e HKD sono collegati automaticamente.
+              </div>
+            </div>
+          );
+        };
+
         // ─── APP PRINCIPALE ──────────────────────────────────────────────────────────
         function App() {
           const [tab, setTab] = useState("FOOD");
@@ -284,7 +460,7 @@
           };
 
           // Auto-set alc tax when enabled
-          React.useEffect(() => {
+          useEffect(() => {
             if (form.hasAlcTax && form.purchaseEur && parseFloat(form.purchaseEur) > 0) {
               const price = parseFloat(form.purchaseEur);
               if (!isNaN(price)) {
@@ -395,25 +571,8 @@
                   </Section>
                 </div>
 
-                {/* ROW 2 - SEZIONE TIPO DI PREZZO ACQUISTO COMMENTATA (NASCOSTA) */}
+                {/* ROW 2 */}
                 <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
-                  {/* 
-                  <Section title="Tipo di prezzo acquisto" icon="💶">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                      {Object.entries(PRICE_TYPE_CONFIG).map(([key, cfg]) => (
-                        <button key={key} onClick={() => set("priceType", key)}
-                          style={{ padding: "10px 12px", background: form.priceType === key ? `${cfg.color}22` : "rgba(255,255,255,0.04)", border: `1px solid ${form.priceType === key ? cfg.color : "rgba(255,255,255,0.09)"}`, borderRadius: "8px", color: form.priceType === key ? "#EEE" : "rgba(221,213,200,0.55)", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "2px" }}>
-                            <span style={{ fontSize: "14px" }}>{cfg.icon}</span>
-                            <div><span style={{ fontSize: "12px", fontWeight: form.priceType === key ? "bold" : "normal" }}>{cfg.label}</span><span style={{ fontSize: "10px", color: "rgba(221,213,200,0.45)", marginLeft: "6px" }}>{cfg.sublabel}</span></div>
-                          </div>
-                          <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.4)", paddingLeft: "21px" }}>{cfg.desc}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </Section>
-                  */}
-
                   <Section title="Prezzo & Contenenza" icon="📦">
                     <Field 
                       label={uomCfg.priceLabel} 
@@ -428,31 +587,32 @@
                     <Field label={`Pallet per container (default: ${defaultPlt})`} placeholder={`${defaultPlt}`} suffix="plt" value={form.pltPerContainer} onChange={v => set("pltPerContainer", v)} hint="Lascia vuoto per il default standard" />
                     <Field label={`Tasso di cambio EUR → HKD (default: ${DEFAULT_EUR_HKD})`} placeholder={`${DEFAULT_EUR_HKD}`} suffix="HKD" value={form.eurToHkd} onChange={v => set("eurToHkd", v)} hint={form.eurToHkd && parseFloat(form.eurToHkd) !== DEFAULT_EUR_HKD ? `→ usando ${parseFloat(form.eurToHkd).toFixed(4)}` : "Lascia vuoto per usare il default 04/2026"} />
                   </Section>
-                </div>
-
-                {/* ROW 3 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
-                  <Section title="Temperatura" icon="🌡️">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                      {TEMP_OPTIONS.map(opt => <RadioCard key={opt.value} label={opt.label} color={opt.color} selected={form.temperature === opt.value} onClick={() => set("temperature", opt.value)} />)}
-                    </div>
-                  </Section>
 
                   <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+                    <Section title="Temperatura" icon="🌡️">
+                      <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
+                        {TEMP_OPTIONS.map(opt => <RadioCard key={opt.value} label={opt.label} color={opt.color} selected={form.temperature === opt.value} onClick={() => set("temperature", opt.value)} />)}
+                      </div>
+                    </Section>
+
                     <Section title="Area fornitore" icon="📍">
                       <div style={{ display: "flex", gap: "7px" }}>
                         {AREA_OPTIONS.map(a => <button key={a.value} onClick={() => set("area", a.value)} style={{ flex: 1, padding: "9px 4px", background: form.area === a.value ? `${accentClr}22` : "rgba(255,255,255,0.04)", border: `1px solid ${form.area === a.value ? accentClr : "rgba(255,255,255,0.1)"}`, borderRadius: "7px", color: form.area === a.value ? "#EEE" : "rgba(221,213,200,0.55)", cursor: "pointer", fontSize: "11px", fontFamily: "inherit" }}>{a.label}</button>)}
                       </div>
                       {fobWarn && <div style={{ fontSize: "10px", color: "#E08040", marginTop: "7px" }}>{fobWarn}</div>}
                     </Section>
-
-                    <Section title="Voci opzionali" icon="⚙️">
-                      <Toggle label="Health Certificate" desc="80 € / container" checked={form.hasCert} onChange={v => set("hasCert", v)} color="#4A9B6C" />
-                      <div style={{ height: "7px" }} />
-                      <Toggle label="Tassa alcolici >30°" desc="Solo superalcolici" checked={form.hasAlcTax} onChange={v => set("hasAlcTax", v)} color="#9B4A6C" />
-                      {form.hasAlcTax && <div style={{ marginTop: "8px" }}><Field label={`Tassa alcolici (€ / ${form.uom.toLowerCase()})`} placeholder="es. 1.50" suffix="€" value={form.alcTaxPerUnit} onChange={v => set("alcTaxPerUnit", v)} /></div>}
-                    </Section>
                   </div>
+                </div>
+
+                {/* ROW 3 - Voci opzionali */}
+                <div style={{ marginBottom: "14px" }}>
+                  <Section title="Voci opzionali" icon="⚙️">
+                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px" }}>
+                      <Toggle label="Health Certificate" desc="80 € / container" checked={form.hasCert} onChange={v => set("hasCert", v)} color="#4A9B6C" />
+                      <Toggle label="Tassa alcolici >30°" desc="Solo superalcolici" checked={form.hasAlcTax} onChange={v => set("hasAlcTax", v)} color="#9B4A6C" />
+                    </div>
+                    {form.hasAlcTax && <div style={{ marginTop: "10px", maxWidth: "280px" }}><Field label={`Tassa alcolici (€ / ${form.uom.toLowerCase()})`} placeholder="es. 1.50" suffix="€" value={form.alcTaxPerUnit} onChange={v => set("alcTaxPerUnit", v)} /></div>}
+                  </Section>
                 </div>
 
                 {/* BUTTON */}
@@ -489,6 +649,15 @@
                       <CostRow label="→ Standard Cost Step 2" eur={result.step2Eur} hkd={result.step2Hkd} bold accent accentColor={accentClr} roundedEur={true} />
                     </div>
                     <CostBar result={result} accentClr={accentClr} />
+
+                    {/* PVP SECTION - Aggiunta qui */}
+                    <PvpSection 
+                      costEur={result.step2Eur} 
+                      costHkd={result.step2Hkd} 
+                      uom={result.uomLabel}
+                      accentClr={accentClr}
+                    />
+
                     <div style={{ marginTop: "14px", padding: "12px 16px", background: "rgba(255,200,80,0.04)", border: "1px solid rgba(255,200,80,0.12)", borderRadius: "8px", fontSize: "11px", color: "rgba(221,213,200,0.4)" }}>⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026).</div>
                   </div>
                 )}
