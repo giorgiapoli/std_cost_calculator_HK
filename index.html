@@ -42,7 +42,11 @@
         .pvp-grid { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
         .pvp-field { background:rgba(255,255,255,0.04); padding:14px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); }
         .pvp-field label { display:block; font-size:11px; color:rgba(221,213,200,0.5); margin-bottom:6px; }
-        .pvp-field input { width:100%; padding:10px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:14px; font-family:inherit; outline:none; }
+        .pvp-field input { width:100%; padding:10px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:16px; font-family:inherit; outline:none; text-align:right; }
+        .pvp-field input:focus { border-color:rgba(196,135,59,0.5); }
+        .pvp-field .input-wrapper { position:relative; }
+        .pvp-field .currency-symbol { position:absolute; left:12px; top:50%; transform:translateY(-50%); font-size:14px; color:rgba(221,213,200,0.3); pointer-events:none; }
+        .pvp-field input { padding-left:28px; }
         .margin-box { margin-top:10px; padding:10px 12px; background:rgba(74,155,108,0.1); border-radius:6px; display:flex; justify-content:space-between; align-items:center; font-size:13px; }
         .margin-box .pct { font-weight:bold; font-size:20px; }
         .pct.positive { color:#4A9B6C; }
@@ -212,7 +216,10 @@
             <div class="pvp-grid">
                 <div class="pvp-field">
                     <label>Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
-                    <input type="number" id="pvpEur" placeholder="es. 5.00" step="any" oninput="calcMargin()">
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">€</span>
+                        <input type="text" id="pvpEur" placeholder="0,00" oninput="formatAndSyncPVP('eur')" onfocus="this.select()">
+                    </div>
                     <div class="margin-box">
                         <span>Margine %</span>
                         <span class="pct" id="marginEurPct">—</span>
@@ -221,7 +228,10 @@
                 </div>
                 <div class="pvp-field">
                     <label>Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
-                    <input type="number" id="pvpHgk" placeholder="es. 45.00" step="any" oninput="calcMargin()">
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">HK$</span>
+                        <input type="text" id="pvpHgk" placeholder="0,00" oninput="formatAndSyncPVP('hkd')" onfocus="this.select()">
+                    </div>
                     <div class="margin-box">
                         <span>Margine %</span>
                         <span class="pct" id="marginHgkPct">—</span>
@@ -229,7 +239,7 @@
                     <div class="margin-detail" id="marginHgkDetail" style="color:rgba(221,213,200,0.35);"></div>
                 </div>
             </div>
-            <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;">💡 Inserisci il prezzo di vendita per calcolare il margine. I campi EUR e HKD sono collegati automaticamente.</div>
+            <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;">💡 Inserisci il prezzo in EUR o HKD, l'altro campo si aggiorna automaticamente.</div>
         </div>
 
         <div class="disclaimer">⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.</div>
@@ -291,7 +301,6 @@ function updateUOMFields() {
     const hint = $('uomHint');
     const divisorHint = $('divisorHint');
 
-    // Nascondi/mostra campi
     if (uom === 'BOX') {
         qtyField.style.display = 'none';
         boxField.style.display = 'block';
@@ -308,7 +317,6 @@ function updateUOMFields() {
         hint.textContent = 'Inserisci il peso totale del pallet in Kg.';
         divisorHint.textContent = '';
     } else {
-        // PCS
         qtyField.style.display = 'block';
         qtyLabel.textContent = 'Pezzi per cartone';
         boxField.style.display = 'block';
@@ -322,7 +330,7 @@ function updateUOMFields() {
 
 function updateDivisorHint() {
     const uom = state.uom;
-    if (uom === 'BOX') return;
+    if (uom === 'BOX' || uom === 'KG') return;
     const qty = parseFloat($('qtyPerBox').value) || 0;
     const box = parseFloat($('boxPerPallet').value) || 0;
     const hint = $('divisorHint');
@@ -434,7 +442,6 @@ function checkCanCalc() {
         const kg = parseFloat($('kgPerPallet').value);
         ok = price > 0 && kg > 0;
     } else {
-        // PCS
         const qty = parseFloat($('qtyPerBox').value) || 0;
         const box = parseFloat($('boxPerPallet').value) || 0;
         ok = price > 0 && qty > 0 && box > 0;
@@ -456,7 +463,6 @@ function calculate() {
     } else if (uom === 'KG') {
         unitsPerPlt = parseFloat($('kgPerPallet').value) || 0;
     } else {
-        // PCS
         const qty = parseFloat($('qtyPerBox').value) || 0;
         const box = parseFloat($('boxPerPallet').value) || 0;
         unitsPerPlt = qty * box;
@@ -468,7 +474,6 @@ function calculate() {
     const totalUnits = unitsPerPlt * plt;
     if (!totalUnits || !price) return;
 
-    // FOB
     const fobTotal = C.FOB[state.temperature]?.[state.area] || 0;
     const fobPerUnit = fobTotal / totalUnits;
     const licPerUnit = C.LIC_PER_CONTAINER / totalUnits;
@@ -480,7 +485,6 @@ function calculate() {
     const step1Eur = price + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
     const step1Hkd = step1Eur * rate;
 
-    // Warehouse
     let warehousePerUnit = 0;
     let warehouseLabel = '';
     
@@ -490,7 +494,6 @@ function calculate() {
     } else if (state.ubicazione === 'MTS') {
         const dep = (C.MTS.DEPOSITO[state.temperature] || 14.4228) / unitsPerPlt;
         const inbound = (C.MTS.INBOUND[state.temperature] || 2.5755) / unitsPerPlt;
-        // Per MTS picking: per KG usiamo 1 come divisore (il costo è per kg/pallet)
         const pickDiv = (uom === 'BOX') ? 1 : (uom === 'KG' ? 1 : parseFloat($('qtyPerBox').value) || 1);
         const picking = (C.MTS.PICKING[state.temperature] || 0.303) / pickDiv;
         warehousePerUnit = dep + inbound + picking;
@@ -521,7 +524,6 @@ function renderResults(r) {
     $('resultEur').textContent = '€ ' + r.step2Eur.toFixed(2);
     $('resultHkd').textContent = 'HK$ ' + r.step2Hkd.toFixed(2);
 
-    // Dettaglio
     let rows = `
         <div class="cost-row bold">Prezzo acquisto <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
         <div class="divider"></div>
@@ -553,45 +555,100 @@ function renderResults(r) {
     $('marginHgkDetail').textContent = '';
 }
 
-// ─── MARGINE ────────────────────────────────────────────────────
-function calcMargin() {
-    const r = state.lastResult;
-    if (!r) return;
-
+// ─── PVP FORMAT E SINCRONIZZAZIONE ─────────────────────────────
+function formatAndSyncPVP(source) {
+    const eurInput = $('pvpEur');
+    const hkdInput = $('pvpHgk');
     const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
-    const pvpEur = parseFloat($('pvpEur').value);
-    const pvpHkd = parseFloat($('pvpHgk').value);
-
-    // Sincronizza
-    if (pvpEur > 0) {
-        const hkd = pvpEur * rate;
-        $('pvpHgk').value = hkd.toFixed(2);
-        updateMargin('Eur', pvpEur, r.step2Eur);
-    } else if (pvpHkd > 0) {
-        const eur = pvpHkd / rate;
-        $('pvpEur').value = eur.toFixed(4);
-        updateMargin('Hgk', pvpHkd, r.step2Hkd);
+    const r = state.lastResult;
+    
+    if (source === 'eur') {
+        // L'utente sta digitando in EUR
+        let rawValue = eurInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+        if (rawValue === '') {
+            hkdInput.value = '';
+            updateMarginDisplay(null, null);
+            return;
+        }
+        const eur = parseFloat(rawValue);
+        if (!isNaN(eur) && eur > 0) {
+            const hkd = eur * rate;
+            hkdInput.value = formatNumber(hkd);
+            if (r) updateMarginDisplay(eur, r.step2Eur, 'Eur');
+        } else {
+            hkdInput.value = '';
+        }
     } else {
-        $('marginEurPct').textContent = '—';
-        $('marginEurPct').className = 'pct';
-        $('marginHgkPct').textContent = '—';
-        $('marginHgkPct').className = 'pct';
-        $('marginEurDetail').textContent = '';
-        $('marginHgkDetail').textContent = '';
+        // L'utente sta digitando in HKD
+        let rawValue = hkdInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+        if (rawValue === '') {
+            eurInput.value = '';
+            updateMarginDisplay(null, null);
+            return;
+        }
+        const hkd = parseFloat(rawValue);
+        if (!isNaN(hkd) && hkd > 0) {
+            const eur = hkd / rate;
+            eurInput.value = formatNumber(eur);
+            if (r) updateMarginDisplay(hkd, r.step2Hkd, 'Hgk');
+        } else {
+            eurInput.value = '';
+        }
     }
 }
 
-function updateMargin(suffix, pvp, cost) {
-    const pctEl = $('margin' + suffix + 'Pct');
-    const detailEl = $('margin' + suffix + 'Detail');
+function formatNumber(num) {
+    // Formatta con punto come separatore delle migliaia e virgola per i decimali
+    if (isNaN(num)) return '';
+    const parts = num.toFixed(2).split('.');
+    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+    return intPart + ',' + parts[1];
+}
+
+function updateMarginDisplay(pvp, cost, suffix) {
+    const pctEl = $('margin' + (suffix || 'Eur') + 'Pct');
+    const detailEl = $('margin' + (suffix || 'Eur') + 'Detail');
+    
+    if (pvp === null || pvp <= 0 || !cost) {
+        pctEl.textContent = '—';
+        pctEl.className = 'pct';
+        detailEl.textContent = '';
+        return;
+    }
+    
     const margin = ((pvp - cost) / pvp) * 100;
+    const abs = pvp - cost;
+    const symbol = suffix === 'Eur' || suffix === 'eur' ? '€' : 'HK$';
+    const suffixKey = suffix === 'Eur' || suffix === 'eur' ? 'Eur' : 'Hgk';
+    
     pctEl.textContent = margin.toFixed(1) + '%';
     pctEl.className = 'pct ' + (margin >= 0 ? 'positive' : 'negative');
-    const abs = pvp - cost;
-    const symbol = suffix === 'Eur' ? '€' : 'HK$';
-    detailEl.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + 
+    
+    const detailEl2 = $('margin' + suffixKey + 'Detail');
+    detailEl2.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + 
         `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${abs.toFixed(2)} / unità`;
-    detailEl.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
+    detailEl2.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
+    
+    // Aggiorna anche l'altro margine
+    if (suffixKey === 'Eur' && state.lastResult) {
+        const hkdPvp = parseFloat($('pvpHgk').value.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
+        if (hkdPvp > 0) {
+            const hkdMargin = ((hkdPvp - state.lastResult.step2Hkd) / hkdPvp) * 100;
+            const hkdPct = $('marginHgkPct');
+            const hkdDetail = $('marginHgkDetail');
+            hkdPct.textContent = hkdMargin.toFixed(1) + '%';
+            hkdPct.className = 'pct ' + (hkdMargin >= 0 ? 'positive' : 'negative');
+            const hkdAbs = hkdPvp - state.lastResult.step2Hkd;
+            hkdDetail.textContent = (hkdMargin >= 0 ? '✅ ' : '⚠️ ') + 
+                `Margine ${hkdMargin >= 0 ? 'positivo' : 'negativo'}: HK$ ${hkdAbs.toFixed(2)} / unità`;
+            hkdDetail.style.color = hkdMargin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
+        }
+    }
+}
+
+// ─── MARGINE (legacy, mantenuto per compatibilità) ──────────────
+function calcMargin() {
+    // Gestito da formatAndSyncPVP
 }
 
 // ─── INIT ──────────────────────────────────────────────────────
