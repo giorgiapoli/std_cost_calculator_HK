@@ -23,6 +23,8 @@
         .btn-area-group { display:flex; gap:7px; }
         .btn-area { flex:1; padding:9px 4px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:rgba(221,213,200,0.55); cursor:pointer; font-size:11px; font-family:inherit; transition:all 0.2s; text-align:center; }
         .btn-area.active { background:rgba(196,135,59,0.2); border-color:#C4873B; color:#EEE; }
+        .btn-ubic { padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; text-align:left; transition:all 0.2s; width:100%; }
+        .btn-ubic.active { color:#EEE; }
         .btn-option { padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; text-align:center; transition:all 0.2s; }
         .btn-option.active { color:#EEE; }
         .calc-btn { width:100%; padding:15px; background:linear-gradient(135deg,#C4873B,#1A4060); border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:bold; letter-spacing:1px; font-family:inherit; cursor:pointer; transition:all 0.3s; }
@@ -68,34 +70,69 @@
 
 <div class="container" id="app">
 
-    <!-- UOM -->
-    <div class="box">
-        <div class="box-title">📐 Unità di Misura (UOM)</div>
-        <div class="btn-group">
-            <button class="btn active" data-uom="PCS" onclick="setUOM('PCS')">🔢 PCS</button>
-            <button class="btn" data-uom="BOX" onclick="setUOM('BOX')">📦 BOX</button>
-            <button class="btn" data-uom="KG" onclick="setUOM('KG')">⚖️ KG</button>
+    <!-- ROW 1: UOM + UBICAZIONE -->
+    <div class="grid-2">
+        <!-- UOM -->
+        <div class="box">
+            <div class="box-title">📐 Unità di Misura (UOM)</div>
+            <div class="btn-group">
+                <button class="btn active" data-uom="PCS" onclick="setUOM('PCS')">🔢 PCS</button>
+                <button class="btn" data-uom="BOX" onclick="setUOM('BOX')">📦 BOX</button>
+                <button class="btn" data-uom="KG" onclick="setUOM('KG')">⚖️ KG</button>
+            </div>
+            <div class="hint" id="uomHint">Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.</div>
         </div>
-        <div class="hint" id="uomHint">Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.</div>
+
+        <!-- UBICAZIONE (MTO/MTS/FOR) -->
+        <div class="box">
+            <div class="box-title">🏭 Gestione magazzino (Ubicazione)</div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+                <button class="btn-ubic active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
+                    🔄 MTO — Cross-docking
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Costo In+Stock+Out per pallet</div>
+                </button>
+                <button class="btn-ubic" data-ubic="FOR" onclick="setUbic('FOR')">
+                    🚛 FOR — Franco fornitore
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Nessun costo handling aggiunto</div>
+                </button>
+                <button class="btn-ubic" data-ubic="MTS" onclick="setUbic('MTS')">
+                    🏭 MTS — Magazzino Unifreddo
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Deposito + Inbound + Picking</div>
+                </button>
+            </div>
+        </div>
     </div>
 
-    <!-- Prezzo & Contenenza -->
+    <!-- ROW 2: PREZZO + CONTENENZA / TEMPERATURA + AREA -->
     <div class="grid-2">
+        <!-- PREZZO & CONTENENZA -->
         <div class="box">
             <div class="box-title">📦 Prezzo & Contenenza</div>
             <div class="field">
                 <label id="priceLabel">Prezzo acquisto per PEZZO (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);font-style:italic;">(LISTINO FORNITORE)</span></label>
                 <input type="number" id="purchasePrice" placeholder="es. 2.50" step="any" oninput="onInputChange()">
             </div>
+            
+            <!-- Campo 1: Pezzi per cartone (solo per PCS) / Kg per cartone (solo per KG) -->
             <div class="field" id="qtyField">
                 <label id="qtyLabel">Pezzi per cartone</label>
                 <input type="number" id="qtyPerBox" placeholder="es. 12" step="any" oninput="onInputChange()">
             </div>
-            <div class="field">
+
+            <!-- Campo 2: Cartoni per pallet (solo per PCS e BOX) -->
+            <div class="field" id="boxField">
                 <label id="boxLabel">Cartoni per pallet</label>
                 <input type="number" id="boxPerPallet" placeholder="es. 70" step="any" oninput="onInputChange()">
                 <div class="hint" id="divisorHint"></div>
             </div>
+
+            <!-- Campo 3: Kg per pallet (solo per KG) -->
+            <div class="field hidden" id="kgPerPalletField">
+                <label>⚖️ Kg per pallet</label>
+                <input type="number" id="kgPerPallet" placeholder="es. 720" step="any" oninput="onInputChange()">
+                <div class="hint">Peso totale del pallet in kg (es: 4kg/box × 180 box/pallet = 720kg)</div>
+            </div>
+
             <div class="field">
                 <label>Pallet per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span></label>
                 <input type="number" id="pltPerContainer" placeholder="25" step="any" oninput="onInputChange()">
@@ -106,8 +143,9 @@
             </div>
         </div>
 
+        <!-- TEMPERATURA + AREA -->
         <div>
-            <!-- Temperatura -->
+            <!-- TEMPERATURA -->
             <div class="box">
                 <div class="box-title">🌡️ Temperatura</div>
                 <div style="display:flex;flex-direction:column;gap:7px;">
@@ -117,7 +155,7 @@
                 </div>
             </div>
 
-            <!-- Area -->
+            <!-- AREA -->
             <div class="box">
                 <div class="box-title">📍 Area fornitore</div>
                 <div class="btn-area-group">
@@ -128,7 +166,7 @@
                 <div class="warn" id="fobWarn" style="display:none;"></div>
             </div>
 
-            <!-- Opzioni -->
+            <!-- OPZIONI -->
             <div class="box">
                 <div class="box-title">⚙️ Voci opzionali</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
@@ -203,6 +241,7 @@
 // ─── STATO ──────────────────────────────────────────────────────
 const state = {
     uom: 'PCS',
+    ubicazione: 'MTO',
     temperature: 'DRY',
     area: 'NORD',
     hasCert: false,
@@ -223,6 +262,11 @@ const C = {
     HC_PER_CONTAINER: 80,
     PALLET_COST: 30,
     MTO_PER_PLT: { DRY: 8.16, FRESH: 10.2, FROZEN: 12.24 },
+    MTS: {
+        DEPOSITO: { DRY: 14.4228, FRESH: 16.4832, FROZEN: 24.7248 },
+        INBOUND: { DRY: 2.5755, FRESH: 3.6057, FROZEN: 3.6057 },
+        PICKING: { DRY: 0.303, FRESH: 0.3434, FROZEN: 0.3535 },
+    },
     DEFAULT_PLT: { DRY: 25, FRESH: 23, FROZEN: 23 },
 };
 
@@ -232,49 +276,76 @@ function $(id) { return document.getElementById(id); }
 function setUOM(uom) {
     state.uom = uom;
     document.querySelectorAll('[data-uom]').forEach(el => el.classList.toggle('active', el.dataset.uom === uom));
-    updateUOM();
+    updateUOMFields();
     clearResults();
 }
 
-function updateUOM() {
+function updateUOMFields() {
     const uom = state.uom;
     const qtyField = $('qtyField');
-    const priceLabel = $('priceLabel');
     const qtyLabel = $('qtyLabel');
+    const boxField = $('boxField');
     const boxLabel = $('boxLabel');
+    const kgField = $('kgPerPalletField');
+    const priceLabel = $('priceLabel');
     const hint = $('uomHint');
-    
+    const divisorHint = $('divisorHint');
+
+    // Nascondi/mostra campi
     if (uom === 'BOX') {
         qtyField.style.display = 'none';
+        boxField.style.display = 'block';
+        kgField.style.display = 'none';
         priceLabel.textContent = 'Prezzo acquisto per CARTONE/BOX (€)';
         boxLabel.textContent = 'Cartoni (BOX) per pallet';
         hint.textContent = 'Prezzo per cartone/box. Divisore = box/pallet × plt/container.';
+        divisorHint.textContent = '';
     } else if (uom === 'KG') {
-        qtyField.style.display = 'block';
-        qtyLabel.textContent = 'Kg netti per cartone';
+        qtyField.style.display = 'none';
+        boxField.style.display = 'none';
+        kgField.style.display = 'block';
         priceLabel.textContent = 'Prezzo acquisto per KG (€)';
-        boxLabel.textContent = 'Cartoni per pallet';
-        hint.textContent = 'Prezzo per kg. Divisore = kg/cartone × cartoni/pallet × plt/container.';
+        hint.textContent = 'Inserisci il peso totale del pallet in Kg.';
+        divisorHint.textContent = '';
     } else {
+        // PCS
         qtyField.style.display = 'block';
         qtyLabel.textContent = 'Pezzi per cartone';
-        priceLabel.textContent = 'Prezzo acquisto per PEZZO (€)';
+        boxField.style.display = 'block';
         boxLabel.textContent = 'Cartoni per pallet';
+        kgField.style.display = 'none';
+        priceLabel.textContent = 'Prezzo acquisto per PEZZO (€)';
         hint.textContent = 'Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.';
+        updateDivisorHint();
     }
-    updateDivisorHint();
 }
 
 function updateDivisorHint() {
     const uom = state.uom;
+    if (uom === 'BOX') return;
     const qty = parseFloat($('qtyPerBox').value) || 0;
     const box = parseFloat($('boxPerPallet').value) || 0;
     const hint = $('divisorHint');
-    if (uom === 'BOX') {
-        hint.textContent = box ? `→ ${box} box / pallet` : '';
-    } else {
-        hint.textContent = (qty && box) ? `→ ${qty * box} ${uom === 'KG' ? 'kg' : 'pz'} / pallet` : '';
-    }
+    hint.textContent = (qty && box) ? `→ ${qty * box} pz / pallet` : '';
+}
+
+function setUbic(ubic) {
+    state.ubicazione = ubic;
+    document.querySelectorAll('[data-ubic]').forEach(el => {
+        const isActive = el.dataset.ubic === ubic;
+        el.classList.toggle('active', isActive);
+        const colors = { MTO: '#4A8C9B', FOR: '#6A9B4A', MTS: '#C4873B' };
+        if (isActive) {
+            el.style.borderColor = colors[ubic];
+            el.style.background = colors[ubic] + '22';
+            el.style.color = '#EEE';
+        } else {
+            el.style.borderColor = 'rgba(255,255,255,0.09)';
+            el.style.background = 'rgba(255,255,255,0.04)';
+            el.style.color = 'rgba(221,213,200,0.6)';
+        }
+    });
+    clearResults();
 }
 
 function setTemp(temp) {
@@ -340,7 +411,7 @@ function updateRate() {
 }
 
 function onInputChange() {
-    updateDivisorHint();
+    if (state.uom === 'PCS') updateDivisorHint();
     clearResults();
     checkCanCalc();
 }
@@ -353,24 +424,47 @@ function clearResults() {
 
 function checkCanCalc() {
     const price = parseFloat($('purchasePrice').value);
-    const box = parseFloat($('boxPerPallet').value);
-    const qty = parseFloat($('qtyPerBox').value) || 1;
+    const uom = state.uom;
+    let ok = false;
+    
+    if (uom === 'BOX') {
+        const box = parseFloat($('boxPerPallet').value);
+        ok = price > 0 && box > 0;
+    } else if (uom === 'KG') {
+        const kg = parseFloat($('kgPerPallet').value);
+        ok = price > 0 && kg > 0;
+    } else {
+        // PCS
+        const qty = parseFloat($('qtyPerBox').value) || 0;
+        const box = parseFloat($('boxPerPallet').value) || 0;
+        ok = price > 0 && qty > 0 && box > 0;
+    }
+    
     const btn = $('calcBtn');
-    const can = price > 0 && box > 0 && (state.uom === 'BOX' || qty > 0);
-    btn.disabled = !can;
-    btn.textContent = can ? '✦  CALCOLA STANDARD COST' : 'Completa i campi per calcolare';
+    btn.disabled = !ok;
+    btn.textContent = ok ? '✦  CALCOLA STANDARD COST' : 'Completa i campi per calcolare';
 }
 
 // ─── CALCOLO ────────────────────────────────────────────────────
 function calculate() {
     const price = parseFloat($('purchasePrice').value);
-    const qty = parseFloat($('qtyPerBox').value) || 1;
-    const box = parseFloat($('boxPerPallet').value);
+    const uom = state.uom;
+    let unitsPerPlt = 0;
+    
+    if (uom === 'BOX') {
+        unitsPerPlt = parseFloat($('boxPerPallet').value) || 0;
+    } else if (uom === 'KG') {
+        unitsPerPlt = parseFloat($('kgPerPallet').value) || 0;
+    } else {
+        // PCS
+        const qty = parseFloat($('qtyPerBox').value) || 0;
+        const box = parseFloat($('boxPerPallet').value) || 0;
+        unitsPerPlt = qty * box;
+    }
+    
     const plt = parseFloat($('pltPerContainer').value) || C.DEFAULT_PLT[state.temperature] || 25;
     const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
-    const uom = state.uom;
-
-    const unitsPerPlt = uom === 'BOX' ? box : qty * box;
+    
     const totalUnits = unitsPerPlt * plt;
     if (!totalUnits || !price) return;
 
@@ -386,8 +480,24 @@ function calculate() {
     const step1Eur = price + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
     const step1Hkd = step1Eur * rate;
 
-    // Warehouse - MTO
-    const warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
+    // Warehouse
+    let warehousePerUnit = 0;
+    let warehouseLabel = '';
+    
+    if (state.ubicazione === 'MTO') {
+        warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
+        warehouseLabel = '🔄 MTO — In+Stock+Out';
+    } else if (state.ubicazione === 'MTS') {
+        const dep = (C.MTS.DEPOSITO[state.temperature] || 14.4228) / unitsPerPlt;
+        const inbound = (C.MTS.INBOUND[state.temperature] || 2.5755) / unitsPerPlt;
+        // Per MTS picking: per KG usiamo 1 come divisore (il costo è per kg/pallet)
+        const pickDiv = (uom === 'BOX') ? 1 : (uom === 'KG' ? 1 : parseFloat($('qtyPerBox').value) || 1);
+        const picking = (C.MTS.PICKING[state.temperature] || 0.303) / pickDiv;
+        warehousePerUnit = dep + inbound + picking;
+        warehouseLabel = '🏭 MTS — Deposito+Inbound+Picking';
+    } else {
+        warehouseLabel = '🚛 FOR — Nessun costo handling';
+    }
 
     const step2Eur = step1Eur + warehousePerUnit;
     const step2Hkd = step2Eur * rate;
@@ -396,7 +506,7 @@ function calculate() {
         purchaseEur: price,
         purchaseHkd: price * rate,
         fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
-        warehousePerUnit,
+        warehousePerUnit, warehouseLabel,
         step1Eur, step1Hkd, step2Eur, step2Hkd,
         uomLabel: uom,
         rate,
@@ -408,7 +518,6 @@ function calculate() {
 
 // ─── RENDER ─────────────────────────────────────────────────────
 function renderResults(r) {
-    const uom = r.uomLabel;
     $('resultEur').textContent = '€ ' + r.step2Eur.toFixed(2);
     $('resultHkd').textContent = 'HK$ ' + r.step2Hkd.toFixed(2);
 
@@ -425,7 +534,7 @@ function renderResults(r) {
         <div class="divider"></div>
         <div class="cost-row bold">→ Standard Cost Step 1 <span>€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
         <div class="divider"></div>
-        <div class="cost-row">🔄 MTO — In+Stock+Out <span>€ ${r.warehousePerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">${r.warehouseLabel} <span>€ ${r.warehousePerUnit.toFixed(4)}</span></div>
         <div class="divider"></div>
         <div class="cost-row bold highlight" style="color:#C4873B;">→ Standard Cost Step 2 <span>€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
     `;
@@ -487,7 +596,7 @@ function updateMargin(suffix, pvp, cost) {
 
 // ─── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
-    updateUOM();
+    updateUOMFields();
     checkCanCalc();
     updateRate();
 });
