@@ -4,670 +4,667 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Standard Cost Calculator HK | Inalca Food & Beverage</title>
-    <script src="https://unpkg.com/react@18.2.0/umd/react.development.js"></script>
-    <script src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.development.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { margin: 0; font-family: 'Georgia', 'Times New Roman', serif; }
+        body { margin: 0; font-family: 'Georgia', 'Times New Roman', serif; background: linear-gradient(150deg,#0E1820 0%,#162030 60%,#0A1018 100%); color: #DDD5C8; min-height: 100vh; }
+        .header { border-bottom: 1px solid rgba(255,255,255,0.07); background: rgba(0,0,0,0.3); padding: 20px 36px; display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+        .header-icon { width: 42px; height: 42px; background: linear-gradient(135deg,#C4873B,#1A3A4A); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; box-shadow: 0 4px 20px rgba(196,135,59,0.3); }
+        .header-title { font-size: 10px; letter-spacing: 3px; color: #C4873B; text-transform: uppercase; }
+        .header-sub { font-size: 21px; font-weight: bold; line-height: 1.2; }
+        .header-rate { margin-left: auto; text-align: right; font-size: 11px; color: rgba(255,255,255,0.3); }
+        .header-rate strong { color: rgba(255,255,255,0.55); }
+        
+        .container { max-width: 880px; margin: 0 auto; padding: 28px 20px 52px; }
+        
+        .section { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.07); border-radius: 10px; padding: 16px; margin-bottom: 14px; }
+        .section-title { font-size: 10px; letter-spacing: 2px; color: rgba(196,135,59,0.75); text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 6px; }
+        
+        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 7px; }
+        
+        .field { margin-bottom: 10px; }
+        .field label { display: block; font-size: 11px; color: rgba(221,213,200,0.5); margin-bottom: 5px; }
+        .field .note { margin-left: 8px; font-size: 9px; color: rgba(196,135,59,0.6); font-style: italic; }
+        .field input { width: 100%; padding: 9px 11px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #DDD5C8; font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box; }
+        .field input:focus { border-color: rgba(196,135,59,0.5); }
+        .field .hint { font-size: 10px; color: rgba(196,135,59,0.6); margin-top: 3px; }
+        
+        .btn-radio { padding: 9px 12px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.09); border-radius: 7px; color: rgba(221,213,200,0.6); cursor: pointer; font-family: inherit; font-size: 12px; text-align: left; transition: all 0.2s; }
+        .btn-radio.active { color: #EEE; }
+        .btn-radio:disabled { opacity: 0.4; cursor: not-allowed; }
+        
+        .btn-uom { padding: 10px 6px; background: rgba(255,255,255,0.04); border: 2px solid rgba(255,255,255,0.09); border-radius: 8px; color: rgba(221,213,200,0.55); cursor: pointer; font-family: inherit; font-size: 11px; text-align: center; transition: all 0.2s; }
+        .btn-uom.active { background: rgba(196,135,59,0.2); border-color: #C4873B; color: #EEE; }
+        .btn-uom .icon { font-size: 16px; display: block; margin-bottom: 3px; }
+        
+        .btn-area { flex: 1; padding: 9px 4px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: rgba(221,213,200,0.55); cursor: pointer; font-size: 11px; font-family: inherit; transition: all 0.2s; }
+        .btn-area.active { background: rgba(196,135,59,0.2); border-color: #C4873B; color: #EEE; }
+        
+        .toggle { padding: 10px 12px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 8px; cursor: pointer; transition: all 0.2s; user-select: none; }
+        .toggle.active { background: rgba(74,155,108,0.12); border-color: #4A9B6C; }
+        .toggle .check { width: 16px; height: 16px; background: rgba(255,255,255,0.1); border-radius: 4px; display: inline-flex; align-items: center; justify-content: center; font-size: 10px; margin-right: 8px; flex-shrink: 0; }
+        .toggle.active .check { background: #4A9B6C; }
+        
+        .calc-btn { width: 100%; padding: 15px; border: none; border-radius: 10px; color: #fff; font-size: 14px; font-weight: bold; letter-spacing: 1px; font-family: inherit; cursor: pointer; transition: all 0.3s; }
+        .calc-btn:disabled { background: rgba(255,255,255,0.04); color: rgba(255,255,255,0.25); cursor: not-allowed; border: 1px solid rgba(255,255,255,0.08); }
+        
+        .result-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 18px; margin-bottom: 12px; }
+        .result-big { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .result-box { background: linear-gradient(135deg,rgba(196,135,59,0.12),rgba(0,0,0,0.3)); border: 1px solid rgba(196,135,59,0.3); border-radius: 12px; padding: 18px; text-align: center; }
+        .result-box .label { font-size: 10px; letter-spacing: 2px; color: rgba(221,213,200,0.45); text-transform: uppercase; }
+        .result-box .sub { font-size: 10px; color: rgba(221,213,200,0.35); margin-bottom: 8px; }
+        .result-box .value { font-size: 26px; font-weight: bold; color: #E8C97A; font-variant-numeric: tabular-nums; }
+        
+        .cost-row { display: flex; justify-content: space-between; align-items: center; padding: 4px 0; font-size: 12px; color: rgba(221,213,200,0.55); }
+        .cost-row.bold { font-size: 13px; font-weight: bold; color: #DDD5C8; }
+        .cost-row .mono { font-family: monospace; }
+        .divider { height: 1px; background: rgba(255,255,255,0.06); margin: 7px 0; }
+        
+        .pvp-section { margin-top: 20px; padding: 20px; background: rgba(196,135,59,0.06); border: 1px solid rgba(196,135,59,0.2); border-radius: 10px; }
+        .pvp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .pvp-field { background: rgba(255,255,255,0.04); padding: 14px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.06); }
+        .pvp-field label { display: block; font-size: 11px; color: rgba(221,213,200,0.5); margin-bottom: 6px; }
+        .pvp-field input { width: 100%; padding: 10px 12px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 7px; color: #DDD5C8; font-size: 14px; font-family: inherit; outline: none; box-sizing: border-box; }
+        .margin-box { margin-top: 10px; padding: 10px 12px; background: rgba(74,155,108,0.1); border-radius: 6px; display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #DDD5C8; }
+        .margin-box .pct { font-weight: bold; font-size: 20px; }
+        .margin-box .pct.positive { color: #4A9B6C; }
+        .margin-box .pct.negative { color: #B5534A; }
+        .margin-detail { font-size: 10px; color: rgba(221,213,200,0.35); margin-top: 6px; }
+        .margin-detail.negative { color: #B5534A; }
+        
+        .disclaimer { margin-top: 14px; padding: 12px 16px; background: rgba(255,200,80,0.04); border: 1px solid rgba(255,200,80,0.12); border-radius: 8px; font-size: 11px; color: rgba(221,213,200,0.4); }
+        .warn { font-size: 10px; color: #E08040; margin-top: 7px; }
+        .hidden { display: none; }
+        
+        @media (max-width: 600px) {
+            .grid-2 { grid-template-columns: 1fr; }
+            .pvp-grid { grid-template-columns: 1fr; }
+            .header { padding: 16px 20px; }
+            .container { padding: 20px 14px 40px; }
+            .result-big { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
-    <div id="root"></div>
-    <script type="text/babel">
-        // ============================================================
-        // STANDARD COST CALCULATOR HK - VERSIONE CON PVP E MARGINE
-        // ============================================================
 
-        const { useState, useCallback, useEffect } = React;
+<div class="header">
+    <div class="header-icon">🧮</div>
+    <div>
+        <div class="header-title">Hong Kong Branch · Inalca Food & Beverage</div>
+        <div class="header-sub">Standard Cost Estimator</div>
+    </div>
+    <div class="header-rate">
+        EUR/HKD: <strong id="rate-display">9.1437</strong><br>Modello 04/2026
+    </div>
+</div>
 
-        // ─── COST CONSTANTS (COSTS LOG sheet, 04/2026) ───────────────────────────────
-        const C = {
-          EUR_TO_HKD: 9.1437,
+<div class="container" id="app">
+    <!-- TABS -->
+    <div style="display:flex;gap:8px;margin-bottom:22px;">
+        <button class="btn-radio active" style="flex:1;text-align:center;" data-tab="FOOD" onclick="setTab('FOOD')">🍝 Food</button>
+        <button class="btn-radio" style="flex:1;text-align:center;" data-tab="WINE" onclick="setTab('WINE')">🍷 Beverage</button>
+        <button class="btn-radio" style="flex:1;text-align:center;" data-tab="MEAT" onclick="setTab('MEAT')">🥩 Meat/Fish</button>
+    </div>
 
-          FOB: {
-            DRY:    { NORD: 2000,   CENTRO: 0,      SUD: 1108.55 },
-            FRESH:  { NORD: 3500,   CENTRO: 3500,   SUD: 0       },
-            FROZEN: { NORD: 4000,   CENTRO: 0,      SUD: 0       },
-          },
+    <!-- ROW 1 -->
+    <div class="grid-2">
+        <div class="section">
+            <div class="section-title">📐 Unità di Misura (UOM)</div>
+            <div class="grid-3">
+                <button class="btn-uom active" data-uom="PCS" onclick="setUOM('PCS')"><span class="icon">🔢</span>PCS</button>
+                <button class="btn-uom" data-uom="BOX" onclick="setUOM('BOX')"><span class="icon">📦</span>BOX</button>
+                <button class="btn-uom" data-uom="KG" onclick="setUOM('KG')"><span class="icon">⚖️</span>KG</button>
+            </div>
+            <div style="padding:8px 11px;background:rgba(196,135,59,0.06);border:1px solid rgba(196,135,59,0.2);border-radius:6px;font-size:10px;color:rgba(221,213,200,0.6);margin-top:10px;" id="uom-hint">
+                Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.
+            </div>
+        </div>
+        <div class="section">
+            <div class="section-title">🏭 Gestione magazzino (Ubicazione)</div>
+            <div style="display:flex;flex-direction:column;gap:7px;">
+                <button class="btn-radio active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">🔄 MTO — Cross-docking</button>
+                <button class="btn-radio" data-ubic="FOR" onclick="setUbic('FOR')">🚛 FOR — Franco fornitore</button>
+                <button class="btn-radio" data-ubic="MTS" onclick="setUbic('MTS')">🏭 MTS — Magazzino Unifreddo</button>
+            </div>
+        </div>
+    </div>
 
-          LIC_PER_CONTAINER:  863.9828515808698,
-          VGM_PER_CONTAINER:  100,
-          HC_PER_CONTAINER:   80,
-          PALLET_COST:        30,
+    <!-- ROW 2 -->
+    <div class="grid-2">
+        <div class="section">
+            <div class="section-title">📦 Prezzo & Contenenza</div>
+            <div class="field">
+                <label id="price-label">Prezzo acquisto per PEZZO (€) <span class="note">(LISTINO FORNITORE + INTERCOMPANY)</span></label>
+                <input type="number" id="purchase-price" placeholder="es. 2.50" step="any" oninput="onInputChange()">
+            </div>
+            <div class="field" id="qty-field">
+                <label id="qty-label">Pezzi per cartone</label>
+                <input type="number" id="qty-per-box" placeholder="es. 12" step="any" oninput="onInputChange()">
+            </div>
+            <div class="field">
+                <label id="box-label">Cartoni per pallet</label>
+                <input type="number" id="box-per-pallet" placeholder="es. 70" step="any" oninput="onInputChange()">
+                <div class="hint" id="divisor-hint"></div>
+            </div>
+            <div class="field">
+                <label id="plt-label">Pallet per container (default: 25)</label>
+                <input type="number" id="plt-per-container" placeholder="25" step="any" oninput="onInputChange()">
+                <div class="hint">Lascia vuoto per il default standard</div>
+            </div>
+            <div class="field">
+                <label>Tasso di cambio EUR → HKD (default: 9.1437)</label>
+                <input type="number" id="eur-hkd-rate" placeholder="9.1437" step="any" value="9.1437" oninput="onInputChange()">
+                <div class="hint" id="rate-hint">Lascia vuoto per usare il default 04/2026</div>
+            </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:14px;">
+            <div class="section">
+                <div class="section-title">🌡️ Temperatura</div>
+                <div style="display:flex;flex-direction:column;gap:7px;">
+                    <button class="btn-radio active" data-temp="DRY" onclick="setTemp('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.15);color:#EEE;">🌾 Dry (Secco)</button>
+                    <button class="btn-radio" data-temp="FRESH" onclick="setTemp('FRESH')">❄️ Fresh (+15°C / +4°C)</button>
+                    <button class="btn-radio" data-temp="FROZEN" onclick="setTemp('FROZEN')">🧊 Frozen (−18°C)</button>
+                </div>
+            </div>
+            <div class="section">
+                <div class="section-title">📍 Area fornitore</div>
+                <div style="display:flex;gap:7px;">
+                    <button class="btn-area active" data-area="NORD" onclick="setArea('NORD')">Nord</button>
+                    <button class="btn-area" data-area="CENTRO" onclick="setArea('CENTRO')">Centro</button>
+                    <button class="btn-area" data-area="SUD" onclick="setArea('SUD')">Sud</button>
+                </div>
+                <div class="warn" id="fob-warn"></div>
+            </div>
+        </div>
+    </div>
 
-          MTO_PER_PLT: { DRY: 8.16, FRESH: 10.2, FROZEN: 12.24 },
+    <!-- ROW 3 - Opzioni -->
+    <div class="section">
+        <div class="section-title">⚙️ Voci opzionali</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
+            <div class="toggle" id="cert-toggle" onclick="toggleCert()">
+                <div><span class="check"></span>Health Certificate</div>
+                <div style="font-size:10px;color:rgba(221,213,200,0.4);padding-left:24px;">80 € / container</div>
+            </div>
+            <div class="toggle" id="alc-toggle" onclick="toggleAlc()">
+                <div><span class="check"></span>Tassa alcolici >30°</div>
+                <div style="font-size:10px;color:rgba(221,213,200,0.4);padding-left:24px;">Solo superalcolici</div>
+            </div>
+        </div>
+        <div class="field hidden" id="alc-tax-field" style="margin-top:10px;max-width:280px;">
+            <label id="alc-tax-label">Tassa alcolici (€ / unità)</label>
+            <input type="number" id="alc-tax-per-unit" placeholder="es. 1.50" step="any" oninput="onInputChange()">
+        </div>
+    </div>
 
-          MTS: {
-            DEPOSITO: { DRY: 14.4228, FRESH: 16.4832, FROZEN: 24.7248 },
-            INBOUND:  { DRY: 2.5755,  FRESH: 3.6057,  FROZEN: 3.6057  },
-            PICKING:  { DRY: 0.303,   FRESH: 0.3434,  FROZEN: 0.3535  },
-          },
+    <!-- CALCULATE BUTTON -->
+    <button class="calc-btn" id="calc-btn" onclick="calculate()" disabled style="background:linear-gradient(135deg,#C4873B,#1A4060);">Completa i campi per calcolare</button>
 
-          DEFAULT_PLT_PER_CONTAINER: { DRY: 25, FRESH: 23, FROZEN: 23 },
-          IC_RATE: 0.01,
-        };
+    <!-- RESULTS -->
+    <div id="results" style="display:none;margin-top:28px;">
+        <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost 2</div>
+        <div class="result-big" id="result-big"></div>
+        <div class="result-card" id="result-detail"></div>
+        <div id="cost-bar"></div>
+        
+        <!-- PVP Section -->
+        <div class="pvp-section" id="pvp-section">
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;">💰 Prezzo di Vendita & Margine</div>
+            <div class="pvp-grid">
+                <div class="pvp-field">
+                    <label>Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
+                    <input type="number" id="pvp-eur" placeholder="es. 5.00" step="any" oninput="updateMargins()">
+                    <div class="margin-box" id="margin-eur-box">
+                        <span>Margine %</span>
+                        <span class="pct" id="margin-eur-pct">—</span>
+                    </div>
+                    <div class="margin-detail" id="margin-eur-detail"></div>
+                </div>
+                <div class="pvp-field">
+                    <label>Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
+                    <input type="number" id="pvp-hkd" placeholder="es. 45.00" step="any" oninput="updateMargins()">
+                    <div class="margin-box" id="margin-hkd-box">
+                        <span>Margine %</span>
+                        <span class="pct" id="margin-hkd-pct">—</span>
+                    </div>
+                    <div class="margin-detail" id="margin-hkd-detail"></div>
+                </div>
+            </div>
+            <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;">💡 Inserisci il prezzo di vendita per calcolare il margine. I campi EUR e HKD sono collegati automaticamente.</div>
+        </div>
 
-        // ─── UOM CONFIG ──────────────────────────────────────────────────────────────
-        const UOM_CONFIG = {
-          PCS: {
-            label:      "PCS — Pezzo",
-            icon:       "🔢",
-            priceLabel: "Prezzo acquisto per PEZZO (€)",
-            showQty:    true,
-            qtyLabel:   "Pezzi per cartone",
-            qtyPlaceholder: "es. 12",
-            qtySuffix:  "pz",
-            divisor:    f => parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet),
-            hint:       f => f.qtyPerBox && f.boxPerPallet
-              ? `→ ${Math.round(parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet))} pz / pallet`
-              : "",
-            pickingDivisor: f => parseFloat(f.qtyPerBox),
-          },
-          BOX: {
-            label:      "BOX — Cartone",
-            icon:       "📦",
-            priceLabel: "Prezzo acquisto per CARTONE/BOX (€)",
-            showQty:    false,
-            divisor:    f => parseFloat(f.boxPerPallet),
-            hint:       f => f.boxPerPallet ? `→ ${parseFloat(f.boxPerPallet)} box / pallet` : "",
-            pickingDivisor: _ => 1,
-          },
-          KG: {
-            label:      "KG — Chilogrammo",
-            icon:       "⚖️",
-            priceLabel: "Prezzo acquisto per KG (€)",
-            showQty:    true,
-            qtyLabel:   "Kg netti per cartone",
-            qtyPlaceholder: "es. 10",
-            qtySuffix:  "kg",
-            divisor:    f => parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet),
-            hint:       f => f.qtyPerBox && f.boxPerPallet
-              ? `→ ${Math.round(parseFloat(f.qtyPerBox) * parseFloat(f.boxPerPallet))} kg / pallet`
-              : "",
-            pickingDivisor: f => parseFloat(f.qtyPerBox),
-          },
-        };
+        <div class="disclaimer">⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.</div>
+    </div>
+</div>
 
-        // ─── UBICAZIONE / WAREHOUSE CONFIG ───────────────────────────────────────────
-        const UBIC_CONFIG = {
-          MTO: { label: "MTO — Cross-docking", icon: "🔄", sublabel: "Merce in transito a Unifreddo", desc: "Costo In+Stock+Out applicato per pallet", color: "#4A8C9B" },
-          FOR: { label: "FOR — Franco fornitore", icon: "🚛", sublabel: "Fornitore gestisce il trasporto", desc: "Nessun costo di handling aggiunto", color: "#6A9B4A" },
-          MTS: { label: "MTS — Magazzino Unifreddo", icon: "🏭", sublabel: "Stoccato a Unifreddo", desc: "Costi Deposito + Inbound + Picking applicati", color: "#C4873B" },
-        };
+<script>
+// ============================================================
+// STANDARD COST CALCULATOR HK - VERSIONE VANILLA JS
+// ============================================================
 
-        const TEMP_OPTIONS = [
-          { value: "DRY",    label: "🌾 Dry (Secco)",           color: "#C4873B" },
-          { value: "FRESH",  label: "❄️ Fresh (+15°C / +4°C)",   color: "#3B8DC4" },
-          { value: "FROZEN", label: "🧊 Frozen (−18°C)",          color: "#7B3BC4" },
-        ];
+// ─── COST CONSTANTS ────────────────────────────────────────────
+const C = {
+    EUR_TO_HKD: 9.1437,
+    FOB: {
+        DRY:    { NORD: 2000, CENTRO: 0, SUD: 1108.55 },
+        FRESH:  { NORD: 3500, CENTRO: 3500, SUD: 0 },
+        FROZEN: { NORD: 4000, CENTRO: 0, SUD: 0 },
+    },
+    LIC_PER_CONTAINER: 863.9828515808698,
+    VGM_PER_CONTAINER: 100,
+    HC_PER_CONTAINER: 80,
+    PALLET_COST: 30,
+    MTO_PER_PLT: { DRY: 8.16, FRESH: 10.2, FROZEN: 12.24 },
+    MTS: {
+        DEPOSITO: { DRY: 14.4228, FRESH: 16.4832, FROZEN: 24.7248 },
+        INBOUND:  { DRY: 2.5755, FRESH: 3.6057, FROZEN: 3.6057 },
+        PICKING:  { DRY: 0.303, FRESH: 0.3434, FROZEN: 0.3535 },
+    },
+    DEFAULT_PLT: { DRY: 25, FRESH: 23, FROZEN: 23 },
+};
 
-        const AREA_OPTIONS = [
-          { value: "NORD",   label: "Nord" },
-          { value: "CENTRO", label: "Centro" },
-          { value: "SUD",    label: "Sud" },
-        ];
+// ─── STATE ──────────────────────────────────────────────────────
+const state = {
+    tab: 'FOOD',
+    uom: 'PCS',
+    ubicazione: 'MTO',
+    temperature: 'DRY',
+    area: 'NORD',
+    hasCert: false,
+    hasAlcTax: false,
+    result: null,
+};
 
-        const TABS = [
-          { key: "FOOD",  label: "🍝 Food",         desc: "Alimentari, formaggi, pasta…" },
-          { key: "WINE",  label: "🍷 Beverage",      desc: "Vino, spumante, soft drinks…" },
-          { key: "MEAT",  label: "🥩 Meat / Fish",   desc: "Carne, pesce, salumi…" },
-        ];
+// ─── DOM REFS ──────────────────────────────────────────────────
+const $ = id => document.getElementById(id);
 
-        // ─── CALCULATION ─────────────────────────────────────────────────────────────
-        function calcStdCost({ purchaseEur, uom, qtyPerBox, boxPerPallet, temperature, area, pltPerContainer, hasCert, hasAlcTax, alcTaxPerUnit, ubicazione, eurToHkd }) {
-          const rate = eurToHkd || C.EUR_TO_HKD;
-          const uomCfg = UOM_CONFIG[uom];
-          const unitsPerPlt = uomCfg.divisor({ qtyPerBox, boxPerPallet });
-          const totalUnits = unitsPerPlt * pltPerContainer;
-          if (!totalUnits || !purchaseEur) return null;
+// ─── UI FUNCTIONS ──────────────────────────────────────────────
+function setTab(tab) {
+    state.tab = tab;
+    document.querySelectorAll('[data-tab]').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    clearResults();
+}
 
-          const fobTotal = C.FOB[temperature]?.[area] ?? 0;
-          const fobPerUnit = fobTotal / totalUnits;
-          const licPerUnit = C.LIC_PER_CONTAINER / totalUnits;
-          const vgmPerUnit = C.VGM_PER_CONTAINER / totalUnits;
-          const hcPerUnit = hasCert ? C.HC_PER_CONTAINER / totalUnits : 0;
-          const palletPerUnit = C.PALLET_COST / unitsPerPlt;
-          const alcPerUnit = hasAlcTax ? (parseFloat(alcTaxPerUnit) || 0) : 0;
+function setUOM(uom) {
+    state.uom = uom;
+    document.querySelectorAll('.btn-uom').forEach(el => el.classList.toggle('active', el.dataset.uom === uom));
+    updateUOMFields();
+    clearResults();
+}
 
-          const step1Eur = purchaseEur + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
-          const step1Hkd = step1Eur * rate;
+function updateUOMFields() {
+    const uom = state.uom;
+    const qtyField = $('qty-field');
+    const qtyLabel = $('qty-label');
+    const priceLabel = $('price-label');
+    const boxLabel = $('box-label');
+    const hint = $('uom-hint');
+    
+    if (uom === 'BOX') {
+        qtyField.style.display = 'none';
+        priceLabel.textContent = 'Prezzo acquisto per CARTONE/BOX (€)';
+        boxLabel.textContent = 'Cartoni (BOX) per pallet';
+        hint.textContent = 'Prezzo per cartone/box. Divisore = box/pallet × plt/container.';
+    } else if (uom === 'KG') {
+        qtyField.style.display = 'block';
+        qtyLabel.textContent = 'Kg netti per cartone';
+        priceLabel.textContent = 'Prezzo acquisto per KG (€)';
+        boxLabel.textContent = 'Cartoni per pallet';
+        hint.textContent = 'Prezzo per kg. Divisore = kg/cartone × cartoni/pallet × plt/container.';
+    } else {
+        qtyField.style.display = 'block';
+        qtyLabel.textContent = 'Pezzi per cartone';
+        priceLabel.textContent = 'Prezzo acquisto per PEZZO (€)';
+        boxLabel.textContent = 'Cartoni per pallet';
+        hint.textContent = 'Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.';
+    }
+    updateDivisorHint();
+}
 
-          let warehousePerUnit = 0;
-          let warehouseDetail = null;
+function updateDivisorHint() {
+    const uom = state.uom;
+    const qty = parseFloat($('qty-per-box').value) || 0;
+    const box = parseFloat($('box-per-pallet').value) || 0;
+    const hint = $('divisor-hint');
+    if (uom === 'BOX') {
+        hint.textContent = box ? `→ ${box} box / pallet` : '';
+    } else {
+        hint.textContent = (qty && box) ? `→ ${qty * box} ${uom === 'KG' ? 'kg' : 'pz'} / pallet` : '';
+    }
+}
 
-          if (ubicazione === "MTO") {
-            warehousePerUnit = (C.MTO_PER_PLT[temperature] ?? 8.16) / unitsPerPlt;
-            warehouseDetail = { type: "MTO", total: warehousePerUnit };
-          } else if (ubicazione === "MTS") {
-            const dep = (C.MTS.DEPOSITO[temperature] ?? 14.4228) / unitsPerPlt;
-            const inbound = (C.MTS.INBOUND[temperature] ?? 2.5755) / unitsPerPlt;
-            const pickDiv = uomCfg.pickingDivisor({ qtyPerBox, boxPerPallet });
-            const picking = (C.MTS.PICKING[temperature] ?? 0.303) / pickDiv;
-            warehousePerUnit = dep + inbound + picking;
-            warehouseDetail = { type: "MTS", dep, inbound, picking, total: warehousePerUnit };
-          } else {
-            warehouseDetail = { type: "FOR", total: 0 };
-          }
-
-          const step2Eur = step1Eur + warehousePerUnit;
-          const step2Hkd = step2Eur * rate;
-
-          return {
-            purchaseEur, purchaseHkd: purchaseEur * rate,
-            fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
-            step1Eur, step1Hkd, warehouseDetail, warehousePerUnit, step2Eur, step2Hkd,
-            fobPct: fobPerUnit / step2Eur * 100,
-            licPct: licPerUnit / step2Eur * 100,
-            palletPct: palletPerUnit / step2Eur * 100,
-            uomLabel: uom, ubicazioneLabel: ubicazione,
-          };
+function setUbic(ubic) {
+    state.ubicazione = ubic;
+    document.querySelectorAll('[data-ubic]').forEach(el => {
+        el.classList.toggle('active', el.dataset.ubic === ubic);
+        if (el.dataset.ubic === ubic) {
+            el.style.borderColor = ubic === 'MTO' ? '#4A8C9B' : ubic === 'FOR' ? '#6A9B4A' : '#C4873B';
+            el.style.background = (ubic === 'MTO' ? 'rgba(74,140,155,0.15)' : ubic === 'FOR' ? 'rgba(106,155,74,0.15)' : 'rgba(196,135,59,0.15)');
+            el.style.color = '#EEE';
+        } else {
+            el.style.borderColor = 'rgba(255,255,255,0.09)';
+            el.style.background = 'rgba(255,255,255,0.04)';
+            el.style.color = 'rgba(221,213,200,0.6)';
         }
+    });
+    clearResults();
+}
 
-        const DEFAULT_EUR_HKD = 9.1437;
-
-        const EMPTY = {
-          purchaseEur: "", qtyPerBox: "", boxPerPallet: "",
-          uom: "PCS", temperature: "DRY", area: "NORD",
-          pltPerContainer: "", eurToHkd: "",
-          ubicazione: "MTO",
-          hasCert: false, hasAlcTax: false, alcTaxPerUnit: "",
-        };
-
-        // ─── SUB-COMPONENTS ──────────────────────────────────────────────────────────
-        const Section = ({ title, icon, children }) => (
-          <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "16px" }}>
-            <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(196,135,59,0.75)", textTransform: "uppercase", marginBottom: "12px", display: "flex", alignItems: "center", gap: "6px" }}>
-              <span>{icon}</span>{title}
-            </div>
-            {children}
-          </div>
-        );
-
-        const Field = ({ label, placeholder, value, onChange, suffix, hint, note }) => (
-          <div style={{ marginBottom: "10px" }}>
-            <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "5px" }}>
-              {label}
-              {note && <span style={{ marginLeft: "8px", fontSize: "9px", color: "rgba(196,135,59,0.6)", fontStyle: "italic" }}>{note}</span>}
-            </label>
-            <div style={{ position: "relative" }}>
-              <input type="number" placeholder={placeholder} value={value} onChange={e => onChange(e.target.value)} step="any"
-                style={{ width: "100%", padding: "9px 34px 9px 11px", background: "rgba(255,255,255,0.06)", border: "1px solid rgba(255,255,255,0.1)", borderRadius: "7px", color: "#DDD5C8", fontSize: "14px", fontFamily: "inherit", outline: "none", boxSizing: "border-box" }} />
-              {suffix && <span style={{ position: "absolute", right: "10px", top: "50%", transform: "translateY(-50%)", fontSize: "11px", color: "rgba(221,213,200,0.3)" }}>{suffix}</span>}
-            </div>
-            {hint && <div style={{ fontSize: "10px", color: "rgba(196,135,59,0.6)", marginTop: "3px" }}>{hint}</div>}
-          </div>
-        );
-
-        const RadioCard = ({ label, selected, color, onClick }) => (
-          <button onClick={onClick} style={{ padding: "9px 12px", background: selected ? `${color}22` : "rgba(255,255,255,0.04)", border: `1px solid ${selected ? color : "rgba(255,255,255,0.09)"}`, borderRadius: "7px", color: selected ? "#EEE" : "rgba(221,213,200,0.6)", cursor: "pointer", fontFamily: "inherit", fontSize: "12px", textAlign: "left", transition: "all 0.2s" }}>{label}</button>
-        );
-
-        const Toggle = ({ label, desc, checked, onChange, color }) => (
-          <div onClick={() => onChange(!checked)} style={{ padding: "10px 12px", background: checked ? `${color}18` : "rgba(255,255,255,0.03)", border: `1px solid ${checked ? color : "rgba(255,255,255,0.08)"}`, borderRadius: "8px", cursor: "pointer", transition: "all 0.2s", userSelect: "none" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "2px" }}>
-              <div style={{ width: "16px", height: "16px", background: checked ? color : "rgba(255,255,255,0.1)", borderRadius: "4px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "10px", flexShrink: 0 }}>{checked ? "✓" : ""}</div>
-              <span style={{ fontSize: "12px", fontWeight: "bold", color: checked ? "#EEE" : "rgba(221,213,200,0.65)" }}>{label}</span>
-            </div>
-            <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.4)", paddingLeft: "24px" }}>{desc}</div>
-          </div>
-        );
-
-        const BigResult = ({ label, sublabel, value, color }) => (
-          <div style={{ background: `linear-gradient(135deg,${color}18,rgba(0,0,0,0.3))`, border: `1px solid ${color}44`, borderRadius: "12px", padding: "18px", textAlign: "center" }}>
-            <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.45)", textTransform: "uppercase" }}>{label}</div>
-            <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.35)", marginBottom: "8px" }}>{sublabel}</div>
-            <div style={{ fontSize: "26px", fontWeight: "bold", color, fontVariantNumeric: "tabular-nums" }}>{value}</div>
-          </div>
-        );
-
-        const CostRow = ({ label, eur, hkd, pct, bold, accent, accentColor, highlight, roundedEur = false }) => {
-          const color = accent ? accentColor : highlight ? "#DDD5C8" : "rgba(221,213,200,0.55)";
-          const displayEur = roundedEur ? eur.toFixed(2) : eur.toFixed(4);
-          return (
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "4px 0", fontSize: bold ? "13px" : "12px", color, fontWeight: bold ? "bold" : "normal" }}>
-              <span>{label}</span>
-              <div style={{ display: "flex", gap: "14px", alignItems: "center" }}>
-                {pct !== undefined && <span style={{ fontSize: "10px", color: "rgba(221,213,200,0.3)", minWidth: "38px", textAlign: "right" }}>{pct.toFixed(1)}%</span>}
-                <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right" }}>€ {displayEur}</span>
-                {hkd !== undefined && <span style={{ fontVariantNumeric: "tabular-nums", minWidth: "78px", textAlign: "right", color: "#4A9B9B" }}>HK$ {hkd.toFixed(2)}</span>}
-              </div>
-            </div>
-          );
-        };
-
-        const Divider = () => <div style={{ height: "1px", background: "rgba(255,255,255,0.06)", margin: "7px 0" }} />;
-
-        const CostBar = ({ result, accentClr }) => {
-          const wd = result.warehouseDetail;
-          const items = [
-            { label: "Prezzo acquisto", value: result.purchaseEur, color: accentClr },
-            { label: "FOB + Nolo", value: result.fobPerUnit, color: "#4A8C9B" },
-            { label: "LIC + VGM + HC", value: result.licPerUnit + result.vgmPerUnit + result.hcPerUnit, color: "#9B7A4A" },
-            { label: "Pallet", value: result.palletPerUnit, color: "#6A9B4A" },
-            wd.type === "MTO" && { label: "MTO", value: wd.total, color: "#4A8C5B" },
-            wd.type === "MTS" && { label: "MTS Dep", value: wd.dep, color: "#C4873B" },
-            wd.type === "MTS" && { label: "MTS In", value: wd.inbound, color: "#B37030" },
-            wd.type === "MTS" && { label: "MTS Pick", value: wd.picking, color: "#A26020" },
-            result.alcPerUnit > 0 && { label: "Alc Tax", value: result.alcPerUnit, color: "#9B4A6C" },
-          ].filter(Boolean).filter(i => i.value > 0);
-          const total = result.step2Eur;
-          return (
-            <div style={{ background: "rgba(255,255,255,0.025)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: "10px", padding: "14px 16px" }}>
-              <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.4)", marginBottom: "10px" }}>COMPOSIZIONE DEL COSTO</div>
-              <div style={{ display: "flex", height: "11px", borderRadius: "6px", overflow: "hidden", marginBottom: "10px" }}>
-                {items.map((it, i) => <div key={i} style={{ flex: it.value / total, background: it.color, opacity: 0.85 }} />)}
-              </div>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "10px" }}>
-                {items.map((it, i) => <div key={i} style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "rgba(221,213,200,0.55)" }}><div style={{ width: "8px", height: "8px", background: it.color, borderRadius: "2px", opacity: 0.85 }} />{it.label} ({(it.value / total * 100).toFixed(1)}%)</div>)}
-              </div>
-            </div>
-          );
-        };
-
-        // ─── PVP SECTION ─────────────────────────────────────────────────────────────
-        const PvpSection = ({ costEur, costHkd, uom, accentClr }) => {
-          const [pvpEur, setPvpEur] = useState("");
-          const [pvpHkd, setPvpHkd] = useState("");
-          const [marginEur, setMarginEur] = useState(null);
-          const [marginHkd, setMarginHkd] = useState(null);
-
-          const calculateMargin = (pvp, cost) => {
-            if (!pvp || pvp <= 0 || !cost) return null;
-            return ((pvp - cost) / pvp) * 100;
-          };
-
-          const handlePvpEurChange = (value) => {
-            setPvpEur(value);
-            const pvp = parseFloat(value);
-            if (pvp && pvp > 0 && costEur) {
-              const m = calculateMargin(pvp, costEur);
-              setMarginEur(m);
-              // Auto-calculate HKD equivalent
-              const rate = parseFloat(document.querySelector('input[placeholder*="EUR → HKD"]')?.value) || DEFAULT_EUR_HKD;
-              setPvpHkd((pvp * rate).toString());
-            } else {
-              setMarginEur(null);
-            }
-          };
-
-          const handlePvpHkdChange = (value) => {
-            setPvpHkd(value);
-            const pvp = parseFloat(value);
-            if (pvp && pvp > 0 && costHkd) {
-              const m = calculateMargin(pvp, costHkd);
-              setMarginHkd(m);
-              // Auto-calculate EUR equivalent
-              const rate = parseFloat(document.querySelector('input[placeholder*="EUR → HKD"]')?.value) || DEFAULT_EUR_HKD;
-              setPvpEur((pvp / rate).toString());
-            } else {
-              setMarginHkd(null);
-            }
-          };
-
-          const formatMargin = (margin) => {
-            if (margin === null || margin === undefined) return "—";
-            return margin.toFixed(1) + "%";
-          };
-
-          const getMarginColor = (margin) => {
-            if (margin === null) return "rgba(221,213,200,0.5)";
-            return margin >= 0 ? "#4A9B6C" : "#B5534A";
-          };
-
-          return (
-            <div style={{ 
-              marginTop: "20px", 
-              padding: "20px", 
-              background: "rgba(196,135,59,0.06)", 
-              border: "1px solid rgba(196,135,59,0.2)", 
-              borderRadius: "10px" 
-            }}>
-              <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(196,135,59,0.75)", textTransform: "uppercase", marginBottom: "12px" }}>
-                💰 Prezzo di Vendita & Margine
-              </div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px" }}>
-                {/* EUR */}
-                <div style={{ background: "rgba(255,255,255,0.04)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "6px" }}>
-                    Prezzo di Vendita (€) <span style={{ fontSize: "9px", color: "rgba(196,135,59,0.6)" }}>per {uom}</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    placeholder="es. 5.00" 
-                    value={pvpEur} 
-                    onChange={e => handlePvpEurChange(e.target.value)} 
-                    step="any"
-                    style={{ 
-                      width: "100%", 
-                      padding: "10px 12px", 
-                      background: "rgba(255,255,255,0.06)", 
-                      border: "1px solid rgba(255,255,255,0.1)", 
-                      borderRadius: "7px", 
-                      color: "#DDD5C8", 
-                      fontSize: "14px", 
-                      fontFamily: "inherit", 
-                      outline: "none", 
-                      boxSizing: "border-box" 
-                    }} 
-                  />
-                  <div style={{ 
-                    marginTop: "10px", 
-                    padding: "10px 12px", 
-                    background: `rgba(74,155,108,0.1)`, 
-                    border: `1px solid ${getMarginColor(marginEur)}44`, 
-                    borderRadius: "6px", 
-                    display: "flex", 
-                    justifyContent: "space-between", 
-                    alignItems: "center",
-                    fontSize: "13px",
-                    color: "#DDD5C8"
-                  }}>
-                    <span>Margine %</span>
-                    <span style={{ 
-                      fontWeight: "bold", 
-                      fontSize: "20px", 
-                      color: getMarginColor(marginEur)
-                    }}>
-                      {formatMargin(marginEur)}
-                    </span>
-                  </div>
-                  {marginEur !== null && marginEur >= 0 && (
-                    <div style={{ marginTop: "6px", fontSize: "10px", color: "rgba(221,213,200,0.35)" }}>
-                      ✅ Margine positivo: € {(parseFloat(pvpEur) - costEur).toFixed(2)} / {uom}
-                    </div>
-                  )}
-                  {marginEur !== null && marginEur < 0 && (
-                    <div style={{ marginTop: "6px", fontSize: "10px", color: "#B5534A" }}>
-                      ⚠️ Margine negativo: € {(parseFloat(pvpEur) - costEur).toFixed(2)} / {uom}
-                    </div>
-                  )}
-                </div>
-
-                {/* HKD */}
-                <div style={{ background: "rgba(255,255,255,0.04)", padding: "14px", borderRadius: "8px", border: "1px solid rgba(255,255,255,0.06)" }}>
-                  <label style={{ display: "block", fontSize: "11px", color: "rgba(221,213,200,0.5)", marginBottom: "6px" }}>
-                    Prezzo di Vendita (HK$) <span style={{ fontSize: "9px", color: "rgba(196,135,59,0.6)" }}>per {uom}</span>
-                  </label>
-                  <input 
-                    type="number" 
-                    placeholder="es. 45.00" 
-                    value={pvpHkd} 
-                    onChange={e => handlePvpHkdChange(e.target.value)} 
-                    step="any"
-                    style={{ 
-                      width: "100%", 
-                      padding: "10px 12px", 
-                      background: "rgba(255,255,255,0.06)", 
-                      border: "1px solid rgba(255,255,255,0.1)", 
-                      borderRadius: "7px", 
-                      color: "#DDD5C8", 
-                      fontSize: "14px", 
-                      fontFamily: "inherit", 
-                      outline: "none", 
-                      boxSizing: "border-box" 
-                    }} 
-                  />
-                  <div style={{ 
-                    marginTop: "10px", 
-                    padding: "10px 12px", 
-                    background: `rgba(74,155,108,0.1)`, 
-                    border: `1px solid ${getMarginColor(marginHkd)}44`, 
-                    borderRadius: "6px", 
-                    display: "flex", 
-                    justifyContent: "space-between", 
-                    alignItems: "center",
-                    fontSize: "13px",
-                    color: "#DDD5C8"
-                  }}>
-                    <span>Margine %</span>
-                    <span style={{ 
-                      fontWeight: "bold", 
-                      fontSize: "20px", 
-                      color: getMarginColor(marginHkd)
-                    }}>
-                      {formatMargin(marginHkd)}
-                    </span>
-                  </div>
-                  {marginHkd !== null && marginHkd >= 0 && (
-                    <div style={{ marginTop: "6px", fontSize: "10px", color: "rgba(221,213,200,0.35)" }}>
-                      ✅ Margine positivo: HK$ {(parseFloat(pvpHkd) - costHkd).toFixed(2)} / {uom}
-                    </div>
-                  )}
-                  {marginHkd !== null && marginHkd < 0 && (
-                    <div style={{ marginTop: "6px", fontSize: "10px", color: "#B5534A" }}>
-                      ⚠️ Margine negativo: HK$ {(parseFloat(pvpHkd) - costHkd).toFixed(2)} / {uom}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div style={{ marginTop: "10px", fontSize: "10px", color: "rgba(221,213,200,0.3)", textAlign: "center" }}>
-                💡 Inserisci il prezzo di vendita per calcolare il margine. I campi EUR e HKD sono collegati automaticamente.
-              </div>
-            </div>
-          );
-        };
-
-        // ─── APP PRINCIPALE ──────────────────────────────────────────────────────────
-        function App() {
-          const [tab, setTab] = useState("FOOD");
-          const [form, setForm] = useState(EMPTY);
-          const [result, setResult] = useState(null);
-
-          const set = (k, v) => { 
-            setForm(f => ({ ...f, [k]: v })); 
-            setResult(null); 
-          };
-
-          // Auto-set alc tax when enabled
-          useEffect(() => {
-            if (form.hasAlcTax && form.purchaseEur && parseFloat(form.purchaseEur) > 0) {
-              const price = parseFloat(form.purchaseEur);
-              if (!isNaN(price)) {
-                set("alcTaxPerUnit", price.toString());
-              }
-            }
-          }, [form.hasAlcTax, form.purchaseEur]);
-
-          const uomCfg = UOM_CONFIG[form.uom];
-          const tempObj = TEMP_OPTIONS.find(t => t.value === form.temperature);
-          const accentClr = tempObj?.color ?? "#C4873B";
-          const defaultPlt = C.DEFAULT_PLT_PER_CONTAINER[form.temperature];
-          const eurToHkd = parseFloat(form.eurToHkd) || DEFAULT_EUR_HKD;
-
-          const canCalc = (() => {
-            if (!form.purchaseEur || parseFloat(form.purchaseEur) <= 0) return false;
-            if (!form.boxPerPallet || parseFloat(form.boxPerPallet) <= 0) return false;
-            if (uomCfg.showQty && (!form.qtyPerBox || parseFloat(form.qtyPerBox) <= 0)) return false;
-            return true;
-          })();
-
-          const handleCalc = useCallback(() => {
-            const plt = parseFloat(form.pltPerContainer) || defaultPlt;
-            setResult(calcStdCost({
-              purchaseEur: parseFloat(form.purchaseEur),
-              uom: form.uom,
-              qtyPerBox: form.qtyPerBox,
-              boxPerPallet: form.boxPerPallet,
-              temperature: form.temperature,
-              area: form.area,
-              pltPerContainer: plt,
-              hasCert: form.hasCert,
-              hasAlcTax: form.hasAlcTax,
-              alcTaxPerUnit: form.alcTaxPerUnit,
-              ubicazione: form.ubicazione,
-              eurToHkd,
-            }));
-          }, [form, defaultPlt, eurToHkd]);
-
-          const fobWarn = (() => {
-            if (form.temperature === "DRY" && form.area === "CENTRO") return "⚠️ DRY da Centro: FOB = 0 nel modello";
-            if (form.temperature === "FRESH" && form.area === "SUD") return "⚠️ Fresh da Sud: FOB = 0 nel modello";
-            if (form.temperature === "FROZEN" && form.area !== "NORD") return "⚠️ Frozen disponibile solo da Nord";
-            return null;
-          })();
-
-          return (
-            <div style={{ minHeight: "100vh", background: "linear-gradient(150deg,#0E1820 0%,#162030 60%,#0A1018 100%)", fontFamily: "'Georgia','Times New Roman',serif", color: "#DDD5C8" }}>
-              {/* HEADER */}
-              <div style={{ borderBottom: "1px solid rgba(255,255,255,0.07)", background: "rgba(0,0,0,0.3)", padding: "20px 36px", display: "flex", alignItems: "center", gap: "18px" }}>
-                <div style={{ width: "42px", height: "42px", background: `linear-gradient(135deg,${accentClr}cc,#1A3A4A)`, borderRadius: "10px", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "20px", boxShadow: `0 4px 20px ${accentClr}44` }}>🧮</div>
-                <div>
-                  <div style={{ fontSize: "10px", letterSpacing: "3px", color: accentClr, textTransform: "uppercase" }}>Hong Kong Branch · Inalca Food & Beverage</div>
-                  <div style={{ fontSize: "21px", fontWeight: "bold", lineHeight: 1.2 }}>Standard Cost Estimator</div>
-                </div>
-                <div style={{ marginLeft: "auto", textAlign: "right", fontSize: "11px", color: "rgba(255,255,255,0.3)" }}>
-                  EUR/HKD: <strong style={{ color: eurToHkd !== DEFAULT_EUR_HKD ? "#E8C97A" : "rgba(255,255,255,0.55)" }}>{eurToHkd.toFixed(4)}</strong>
-                  {eurToHkd !== DEFAULT_EUR_HKD && <span style={{ color: "#E8C97A", fontSize: "9px", marginLeft: "4px" }}>✎ modificato</span>}<br />
-                  Modello 04/2026
-                </div>
-              </div>
-
-              <div style={{ maxWidth: "880px", margin: "0 auto", padding: "28px 20px 52px" }}>
-                {/* TABS */}
-                <div style={{ display: "flex", gap: "8px", marginBottom: "22px" }}>
-                  {TABS.map(t => (
-                    <button key={t.key} onClick={() => { setTab(t.key); setResult(null); }}
-                      style={{ flex: 1, padding: "11px 6px", background: tab === t.key ? `${accentClr}22` : "rgba(255,255,255,0.03)", border: `1px solid ${tab === t.key ? accentClr : "rgba(255,255,255,0.08)"}`, borderRadius: "9px", color: tab === t.key ? "#EEE" : "rgba(255,255,255,0.45)", cursor: "pointer", fontFamily: "inherit", fontSize: "12px", textAlign: "center", transition: "all 0.25s" }}>
-                      <div style={{ fontSize: "16px", marginBottom: "2px" }}>{t.label.split(" ")[0]}</div>
-                      <div style={{ fontWeight: tab === t.key ? "bold" : "normal" }}>{t.label.slice(2)}</div>
-                      <div style={{ fontSize: "9px", opacity: 0.55, marginTop: "1px" }}>{t.desc}</div>
-                    </button>
-                  ))}
-                </div>
-
-                {/* ROW 1 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
-                  <Section title="Unità di Misura (UOM)" icon="📐">
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: "7px", marginBottom: "10px" }}>
-                      {Object.entries(UOM_CONFIG).map(([key, cfg]) => (
-                        <button key={key} onClick={() => set("uom", key)}
-                          style={{ padding: "10px 6px", background: form.uom === key ? `${accentClr}25` : "rgba(255,255,255,0.04)", border: `2px solid ${form.uom === key ? accentClr : "rgba(255,255,255,0.09)"}`, borderRadius: "8px", color: form.uom === key ? "#EEE" : "rgba(221,213,200,0.55)", cursor: "pointer", fontFamily: "inherit", fontSize: "11px", fontWeight: form.uom === key ? "bold" : "normal", textAlign: "center" }}>
-                          <div style={{ fontSize: "16px", marginBottom: "3px" }}>{cfg.icon}</div>
-                          {cfg.label}
-                        </button>
-                      ))}
-                    </div>
-                    <div style={{ padding: "8px 11px", background: `${accentClr}0E`, border: `1px solid ${accentClr}28`, borderRadius: "6px", fontSize: "10px", color: "rgba(221,213,200,0.6)" }}>
-                      {form.uom === "PCS" && "Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container."}
-                      {form.uom === "BOX" && "Prezzo per cartone/box. Divisore = box/pallet × plt/container."}
-                      {form.uom === "KG" && "Prezzo per kg. Divisore = kg/cartone × cartoni/pallet × plt/container."}
-                    </div>
-                  </Section>
-
-                  <Section title="Gestione magazzino (Ubicazione)" icon="🏭">
-                    <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                      {Object.entries(UBIC_CONFIG).map(([key, cfg]) => (
-                        <button key={key} onClick={() => set("ubicazione", key)}
-                          style={{ padding: "10px 12px", background: form.ubicazione === key ? `${cfg.color}22` : "rgba(255,255,255,0.04)", border: `1px solid ${form.ubicazione === key ? cfg.color : "rgba(255,255,255,0.09)"}`, borderRadius: "8px", color: form.ubicazione === key ? "#EEE" : "rgba(221,213,200,0.55)", cursor: "pointer", fontFamily: "inherit", textAlign: "left" }}>
-                          <div style={{ display: "flex", alignItems: "center", gap: "7px", marginBottom: "2px" }}>
-                            <span style={{ fontSize: "14px" }}>{cfg.icon}</span>
-                            <span style={{ fontSize: "12px", fontWeight: form.ubicazione === key ? "bold" : "normal" }}>{cfg.label}</span>
-                          </div>
-                          <div style={{ fontSize: "10px", color: "rgba(221,213,200,0.45)", paddingLeft: "21px" }}>{cfg.desc}</div>
-                        </button>
-                      ))}
-                    </div>
-                  </Section>
-                </div>
-
-                {/* ROW 2 */}
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "14px", marginBottom: "14px" }}>
-                  <Section title="Prezzo & Contenenza" icon="📦">
-                    <Field 
-                      label={uomCfg.priceLabel} 
-                      note="(LISTINO FORNITORE + INTERCOMPANY + EVENTUALE CARRIAGE)"
-                      placeholder="es. 2.50" 
-                      suffix="€" 
-                      value={form.purchaseEur} 
-                      onChange={v => set("purchaseEur", v)} 
-                    />
-                    {uomCfg.showQty && <Field label={uomCfg.qtyLabel} placeholder={uomCfg.qtyPlaceholder} suffix={uomCfg.qtySuffix} value={form.qtyPerBox} onChange={v => set("qtyPerBox", v)} />}
-                    <Field label={form.uom === "BOX" ? "Cartoni (BOX) per pallet" : "Cartoni per pallet"} placeholder="es. 70" suffix="crt" value={form.boxPerPallet} onChange={v => set("boxPerPallet", v)} hint={uomCfg.hint({ qtyPerBox: form.qtyPerBox, boxPerPallet: form.boxPerPallet })} />
-                    <Field label={`Pallet per container (default: ${defaultPlt})`} placeholder={`${defaultPlt}`} suffix="plt" value={form.pltPerContainer} onChange={v => set("pltPerContainer", v)} hint="Lascia vuoto per il default standard" />
-                    <Field label={`Tasso di cambio EUR → HKD (default: ${DEFAULT_EUR_HKD})`} placeholder={`${DEFAULT_EUR_HKD}`} suffix="HKD" value={form.eurToHkd} onChange={v => set("eurToHkd", v)} hint={form.eurToHkd && parseFloat(form.eurToHkd) !== DEFAULT_EUR_HKD ? `→ usando ${parseFloat(form.eurToHkd).toFixed(4)}` : "Lascia vuoto per usare il default 04/2026"} />
-                  </Section>
-
-                  <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                    <Section title="Temperatura" icon="🌡️">
-                      <div style={{ display: "flex", flexDirection: "column", gap: "7px" }}>
-                        {TEMP_OPTIONS.map(opt => <RadioCard key={opt.value} label={opt.label} color={opt.color} selected={form.temperature === opt.value} onClick={() => set("temperature", opt.value)} />)}
-                      </div>
-                    </Section>
-
-                    <Section title="Area fornitore" icon="📍">
-                      <div style={{ display: "flex", gap: "7px" }}>
-                        {AREA_OPTIONS.map(a => <button key={a.value} onClick={() => set("area", a.value)} style={{ flex: 1, padding: "9px 4px", background: form.area === a.value ? `${accentClr}22` : "rgba(255,255,255,0.04)", border: `1px solid ${form.area === a.value ? accentClr : "rgba(255,255,255,0.1)"}`, borderRadius: "7px", color: form.area === a.value ? "#EEE" : "rgba(221,213,200,0.55)", cursor: "pointer", fontSize: "11px", fontFamily: "inherit" }}>{a.label}</button>)}
-                      </div>
-                      {fobWarn && <div style={{ fontSize: "10px", color: "#E08040", marginTop: "7px" }}>{fobWarn}</div>}
-                    </Section>
-                  </div>
-                </div>
-
-                {/* ROW 3 - Voci opzionali */}
-                <div style={{ marginBottom: "14px" }}>
-                  <Section title="Voci opzionali" icon="⚙️">
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "7px" }}>
-                      <Toggle label="Health Certificate" desc="80 € / container" checked={form.hasCert} onChange={v => set("hasCert", v)} color="#4A9B6C" />
-                      <Toggle label="Tassa alcolici >30°" desc="Solo superalcolici" checked={form.hasAlcTax} onChange={v => set("hasAlcTax", v)} color="#9B4A6C" />
-                    </div>
-                    {form.hasAlcTax && <div style={{ marginTop: "10px", maxWidth: "280px" }}><Field label={`Tassa alcolici (€ / ${form.uom.toLowerCase()})`} placeholder="es. 1.50" suffix="€" value={form.alcTaxPerUnit} onChange={v => set("alcTaxPerUnit", v)} /></div>}
-                  </Section>
-                </div>
-
-                {/* BUTTON */}
-                <button onClick={handleCalc} disabled={!canCalc}
-                  style={{ width: "100%", padding: "15px", background: canCalc ? `linear-gradient(135deg,${accentClr},#1A4060)` : "rgba(255,255,255,0.04)", border: canCalc ? "none" : "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", color: canCalc ? "#fff" : "rgba(255,255,255,0.25)", fontSize: "14px", fontWeight: "bold", letterSpacing: "1px", fontFamily: "inherit", cursor: canCalc ? "pointer" : "not-allowed", boxShadow: canCalc ? `0 8px 28px ${accentClr}44` : "none" }}>
-                  {canCalc ? "✦  CALCOLA STANDARD COST" : "Completa i campi per calcolare"}
-                </button>
-
-                {/* RESULTS */}
-                {result && (
-                  <div style={{ marginTop: "28px" }}>
-                    <div style={{ fontSize: "10px", letterSpacing: "3px", color: accentClr, textTransform: "uppercase", marginBottom: "14px" }}>✦ Risultati — Standard Cost 2 · {result.uomLabel} · {UBIC_CONFIG[result.ubicazioneLabel]?.label || ""}</div>
-                    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px", marginBottom: "14px" }}>
-                      <BigResult label="Standard Cost 2" sublabel={`EURO · per ${result.uomLabel}`} value={`€ ${result.step2Eur.toFixed(2)}`} color={accentClr} />
-                      <BigResult label="Standard Cost 2" sublabel={`HKD · per ${result.uomLabel}`} value={`HK$ ${result.step2Hkd.toFixed(2)}`} color="#4A9B9B" />
-                    </div>
-                    <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "10px", padding: "18px", marginBottom: "12px" }}>
-                      <div style={{ fontSize: "10px", letterSpacing: "2px", color: "rgba(221,213,200,0.45)", marginBottom: "12px" }}>DETTAGLIO COSTI · per {result.uomLabel}</div>
-                      <CostRow label="Prezzo acquisto" eur={result.purchaseEur} hkd={result.purchaseHkd} highlight />
-                      <Divider />
-                      <CostRow label="FOB + Nolo" eur={result.fobPerUnit} pct={result.fobPct} />
-                      <CostRow label="Local Import Charges" eur={result.licPerUnit} pct={result.licPct} />
-                      <CostRow label="VGM Charges" eur={result.vgmPerUnit} />
-                      {result.hcPerUnit > 0 && <CostRow label="Health Certificate" eur={result.hcPerUnit} />}
-                      <CostRow label="Costo pallet" eur={result.palletPerUnit} pct={result.palletPct} />
-                      {result.alcPerUnit > 0 && <CostRow label="Tassa alcolici" eur={result.alcPerUnit} />}
-                      <Divider />
-                      <CostRow label="→ Standard Cost Step 1" eur={result.step1Eur} hkd={result.step1Hkd} bold roundedEur={true} />
-                      <Divider />
-                      {result.warehouseDetail.type === "MTO" && <CostRow label="🔄 MTO — In+Stock+Out" eur={result.warehouseDetail.total} />}
-                      {result.warehouseDetail.type === "FOR" && <div style={{ fontSize: "11px", color: "rgba(106,155,74,0.75)", padding: "4px 0", fontStyle: "italic" }}>🚛 FOR — Nessun costo di handling aggiunto</div>}
-                      {result.warehouseDetail.type === "MTS" && (<><CostRow label="🏭 MTS — Deposito" eur={result.warehouseDetail.dep} /><CostRow label="🏭 MTS — Inbound" eur={result.warehouseDetail.inbound} /><CostRow label="🏭 MTS — Picking" eur={result.warehouseDetail.picking} /></>)}
-                      <Divider />
-                      <CostRow label="→ Standard Cost Step 2" eur={result.step2Eur} hkd={result.step2Hkd} bold accent accentColor={accentClr} roundedEur={true} />
-                    </div>
-                    <CostBar result={result} accentClr={accentClr} />
-
-                    {/* PVP SECTION - Aggiunta qui */}
-                    <PvpSection 
-                      costEur={result.step2Eur} 
-                      costHkd={result.step2Hkd} 
-                      uom={result.uomLabel}
-                      accentClr={accentClr}
-                    />
-
-                    <div style={{ marginTop: "14px", padding: "12px 16px", background: "rgba(255,200,80,0.04)", border: "1px solid rgba(255,200,80,0.12)", borderRadius: "8px", fontSize: "11px", color: "rgba(221,213,200,0.4)" }}>⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026).</div>
-                  </div>
-                )}
-              </div>
-            </div>
-          );
+function setTemp(temp) {
+    state.temperature = temp;
+    document.querySelectorAll('[data-temp]').forEach(el => {
+        const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
+        el.classList.toggle('active', el.dataset.temp === temp);
+        if (el.dataset.temp === temp) {
+            el.style.borderColor = colors[temp];
+            el.style.background = colors[temp] + '22';
+            el.style.color = '#EEE';
+        } else {
+            el.style.borderColor = 'rgba(255,255,255,0.09)';
+            el.style.background = 'rgba(255,255,255,0.04)';
+            el.style.color = 'rgba(221,213,200,0.6)';
         }
+    });
+    updateFobWarn();
+    clearResults();
+}
 
-        // RENDER
-        ReactDOM.createRoot(document.getElementById("root")).render(<App />);
-    </script>
+function setArea(area) {
+    state.area = area;
+    document.querySelectorAll('.btn-area').forEach(el => el.classList.toggle('active', el.dataset.area === area));
+    updateFobWarn();
+    clearResults();
+}
+
+function updateFobWarn() {
+    const temp = state.temperature;
+    const area = state.area;
+    const warn = $('fob-warn');
+    let msg = '';
+    if (temp === 'DRY' && area === 'CENTRO') msg = '⚠️ DRY da Centro: FOB = 0 nel modello';
+    else if (temp === 'FRESH' && area === 'SUD') msg = '⚠️ Fresh da Sud: FOB = 0 nel modello';
+    else if (temp === 'FROZEN' && area !== 'NORD') msg = '⚠️ Frozen disponibile solo da Nord';
+    warn.textContent = msg;
+    warn.style.display = msg ? 'block' : 'none';
+}
+
+function toggleCert() {
+    state.hasCert = !state.hasCert;
+    $('cert-toggle').classList.toggle('active', state.hasCert);
+    clearResults();
+}
+
+function toggleAlc() {
+    state.hasAlcTax = !state.hasAlcTax;
+    $('alc-toggle').classList.toggle('active', state.hasAlcTax);
+    $('alc-tax-field').classList.toggle('hidden', !state.hasAlcTax);
+    clearResults();
+}
+
+function onInputChange() {
+    updateDivisorHint();
+    clearResults();
+    checkCanCalc();
+}
+
+function clearResults() {
+    $('results').style.display = 'none';
+    state.result = null;
+    checkCanCalc();
+}
+
+function checkCanCalc() {
+    const price = parseFloat($('purchase-price').value);
+    const box = parseFloat($('box-per-pallet').value);
+    const qty = parseFloat($('qty-per-box').value) || 1;
+    const btn = $('calc-btn');
+    const can = price > 0 && box > 0 && (state.uom === 'BOX' || qty > 0);
+    btn.disabled = !can;
+    btn.textContent = can ? '✦  CALCOLA STANDARD COST' : 'Completa i campi per calcolare';
+}
+
+// ─── CALCULATION ──────────────────────────────────────────────
+function calculate() {
+    const price = parseFloat($('purchase-price').value);
+    const qty = parseFloat($('qty-per-box').value) || 1;
+    const box = parseFloat($('box-per-pallet').value);
+    const plt = parseFloat($('plt-per-container').value) || C.DEFAULT_PLT[state.temperature] || 25;
+    const rate = parseFloat($('eur-hkd-rate').value) || C.EUR_TO_HKD;
+    const uom = state.uom;
+    
+    const unitsPerPlt = uom === 'BOX' ? box : qty * box;
+    const totalUnits = unitsPerPlt * plt;
+    if (!totalUnits || !price) return;
+
+    // FOB
+    const fobTotal = C.FOB[state.temperature]?.[state.area] || 0;
+    const fobPerUnit = fobTotal / totalUnits;
+    const licPerUnit = C.LIC_PER_CONTAINER / totalUnits;
+    const vgmPerUnit = C.VGM_PER_CONTAINER / totalUnits;
+    const hcPerUnit = state.hasCert ? C.HC_PER_CONTAINER / totalUnits : 0;
+    const palletPerUnit = C.PALLET_COST / unitsPerPlt;
+    const alcPerUnit = state.hasAlcTax ? (parseFloat($('alc-tax-per-unit').value) || 0) : 0;
+
+    const step1Eur = price + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
+    const step1Hkd = step1Eur * rate;
+
+    // Warehouse
+    let warehousePerUnit = 0;
+    let wd = null;
+    if (state.ubicazione === 'MTO') {
+        warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
+        wd = { type: 'MTO', total: warehousePerUnit };
+    } else if (state.ubicazione === 'MTS') {
+        const dep = (C.MTS.DEPOSITO[state.temperature] || 14.4228) / unitsPerPlt;
+        const inbound = (C.MTS.INBOUND[state.temperature] || 2.5755) / unitsPerPlt;
+        const pickDiv = uom === 'BOX' ? 1 : qty;
+        const picking = (C.MTS.PICKING[state.temperature] || 0.303) / pickDiv;
+        warehousePerUnit = dep + inbound + picking;
+        wd = { type: 'MTS', dep, inbound, picking, total: warehousePerUnit };
+    } else {
+        wd = { type: 'FOR', total: 0 };
+    }
+
+    const step2Eur = step1Eur + warehousePerUnit;
+    const step2Hkd = step2Eur * rate;
+
+    const result = {
+        purchaseEur: price,
+        purchaseHkd: price * rate,
+        fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
+        step1Eur, step1Hkd, step2Eur, step2Hkd,
+        warehouseDetail: wd,
+        uomLabel: uom,
+        fobPct: fobPerUnit / step2Eur * 100,
+        licPct: licPerUnit / step2Eur * 100,
+        palletPct: palletPerUnit / step2Eur * 100,
+        rate,
+    };
+
+    state.result = result;
+    renderResults(result);
+}
+
+// ─── RENDER RESULTS ────────────────────────────────────────────
+function renderResults(r) {
+    const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
+    const accent = colors[state.temperature] || '#C4873B';
+    const uom = r.uomLabel;
+    const ubicLabels = { MTO: 'MTO — Cross-docking', FOR: 'FOR — Franco fornitore', MTS: 'MTS — Magazzino Unifreddo' };
+
+    // Big results
+    $('result-big').innerHTML = `
+        <div class="result-box" style="border-color:${accent}44;background:linear-gradient(135deg,${accent}18,rgba(0,0,0,0.3));">
+            <div class="label">Standard Cost 2</div>
+            <div class="sub">EURO · per ${uom}</div>
+            <div class="value" style="color:${accent};">€ ${r.step2Eur.toFixed(2)}</div>
+        </div>
+        <div class="result-box" style="border-color:#4A9B9B44;background:linear-gradient(135deg,rgba(74,155,155,0.12),rgba(0,0,0,0.3));">
+            <div class="label">Standard Cost 2</div>
+            <div class="sub">HKD · per ${uom}</div>
+            <div class="value" style="color:#4A9B9B;">HK$ ${r.step2Hkd.toFixed(2)}</div>
+        </div>
+    `;
+
+    // Detail rows
+    const wd = r.warehouseDetail;
+    let whRows = '';
+    if (wd.type === 'MTO') {
+        whRows = `<div class="cost-row">🔄 MTO — In+Stock+Out <span class="mono">€ ${wd.total.toFixed(4)}</span></div>`;
+    } else if (wd.type === 'FOR') {
+        whRows = `<div style="font-size:11px;color:rgba(106,155,74,0.75);padding:4px 0;font-style:italic;">🚛 FOR — Nessun costo di handling aggiunto</div>`;
+    } else if (wd.type === 'MTS') {
+        whRows = `
+            <div class="cost-row">🏭 MTS — Deposito <span class="mono">€ ${wd.dep.toFixed(4)}</span></div>
+            <div class="cost-row">🏭 MTS — Inbound <span class="mono">€ ${wd.inbound.toFixed(4)}</span></div>
+            <div class="cost-row">🏭 MTS — Picking <span class="mono">€ ${wd.picking.toFixed(4)}</span></div>
+        `;
+    }
+
+    $('result-detail').innerHTML = `
+        <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;">DETTAGLIO COSTI · per ${uom} · ${ubicLabels[state.ubicazione] || ''}</div>
+        <div class="cost-row bold" style="color:#DDD5C8;">Prezzo acquisto <span class="mono">€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
+        <div class="divider"></div>
+        <div class="cost-row">FOB + Nolo <span class="mono">€ ${r.fobPerUnit.toFixed(4)} (${r.fobPct.toFixed(1)}%)</span></div>
+        <div class="cost-row">Local Import Charges <span class="mono">€ ${r.licPerUnit.toFixed(4)} (${r.licPct.toFixed(1)}%)</span></div>
+        <div class="cost-row">VGM Charges <span class="mono">€ ${r.vgmPerUnit.toFixed(4)}</span></div>
+        ${r.hcPerUnit > 0 ? `<div class="cost-row">Health Certificate <span class="mono">€ ${r.hcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="cost-row">Costo pallet <span class="mono">€ ${r.palletPerUnit.toFixed(4)} (${r.palletPct.toFixed(1)}%)</span></div>
+        ${r.alcPerUnit > 0 ? `<div class="cost-row">Tassa alcolici <span class="mono">€ ${r.alcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="divider"></div>
+        <div class="cost-row bold">→ Standard Cost Step 1 <span class="mono">€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
+        <div class="divider"></div>
+        ${whRows}
+        <div class="divider"></div>
+        <div class="cost-row bold" style="color:${accent};">→ Standard Cost Step 2 <span class="mono">€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
+    `;
+
+    // Cost bar
+    const items = [
+        { label: 'Acquisto', value: r.purchaseEur, color: accent },
+        { label: 'FOB+Nolo', value: r.fobPerUnit, color: '#4A8C9B' },
+        { label: 'LIC+VGM', value: r.licPerUnit + r.vgmPerUnit, color: '#9B7A4A' },
+        { label: 'Pallet', value: r.palletPerUnit, color: '#6A9B4A' },
+    ];
+    if (wd.type === 'MTO') items.push({ label: 'MTO', value: wd.total, color: '#4A8C5B' });
+    if (wd.type === 'MTS') {
+        items.push({ label: 'Dep', value: wd.dep, color: '#C4873B' });
+        items.push({ label: 'In', value: wd.inbound, color: '#B37030' });
+        items.push({ label: 'Pick', value: wd.picking, color: '#A26020' });
+    }
+    if (r.alcPerUnit > 0) items.push({ label: 'Alc', value: r.alcPerUnit, color: '#9B4A6C' });
+    if (r.hcPerUnit > 0) items.push({ label: 'HC', value: r.hcPerUnit, color: '#4A9B6C' });
+    
+    const total = r.step2Eur;
+    let barHtml = items.map(it => `<div style="flex:${it.value/total};background:${it.color};opacity:0.85;"></div>`).join('');
+    let legendHtml = items.map(it => `<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:rgba(221,213,200,0.55);"><div style="width:8px;height:8px;background:${it.color};border-radius:2px;opacity:0.85;"></div>${it.label} (${(it.value/total*100).toFixed(1)}%)</div>`).join('');
+
+    $('cost-bar').innerHTML = `
+        <div style="background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:10px;padding:14px 16px;">
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.4);margin-bottom:10px;">COMPOSIZIONE DEL COSTO</div>
+            <div style="display:flex;height:11px;border-radius:6px;overflow:hidden;margin-bottom:10px;">${barHtml}</div>
+            <div style="display:flex;flex-wrap:wrap;gap:10px;">${legendHtml}</div>
+        </div>
+    `;
+
+    // Show results and PVP
+    $('results').style.display = 'block';
+    $('pvp-section').style.display = 'block';
+    
+    // Reset PVP fields
+    $('pvp-eur').value = '';
+    $('pvp-hkd').value = '';
+    $('margin-eur-pct').textContent = '—';
+    $('margin-eur-pct').className = 'pct';
+    $('margin-hkd-pct').textContent = '—';
+    $('margin-hkd-pct').className = 'pct';
+    $('margin-eur-detail').textContent = '';
+    $('margin-hkd-detail').textContent = '';
+}
+
+// ─── PVP & MARGIN ──────────────────────────────────────────────
+function updateMargins() {
+    const r = state.result;
+    if (!r) return;
+
+    const rate = parseFloat($('eur-hkd-rate').value) || C.EUR_TO_HKD;
+    const pvpEur = parseFloat($('pvp-eur').value);
+    const pvpHkd = parseFloat($('pvp-hkd').value);
+
+    // Sync EUR -> HKD
+    if (pvpEur && pvpEur > 0) {
+        const hkd = pvpEur * rate;
+        $('pvp-hkd').value = hkd.toFixed(2);
+        updateMargin('eur', pvpEur, r.step2Eur);
+        updateMargin('hkd', hkd, r.step2Hkd);
+    } else if (pvpHkd && pvpHkd > 0) {
+        const eur = pvpHkd / rate;
+        $('pvp-eur').value = eur.toFixed(4);
+        updateMargin('hkd', pvpHkd, r.step2Hkd);
+        updateMargin('eur', eur, r.step2Eur);
+    } else {
+        // Clear if empty
+        if (!pvpEur) {
+            $('margin-eur-pct').textContent = '—';
+            $('margin-eur-pct').className = 'pct';
+            $('margin-eur-detail').textContent = '';
+        }
+        if (!pvpHkd) {
+            $('margin-hkd-pct').textContent = '—';
+            $('margin-hkd-pct').className = 'pct';
+            $('margin-hkd-detail').textContent = '';
+        }
+    }
+}
+
+function updateMargin(currency, pvp, cost) {
+    const pctEl = $(`margin-${currency}-pct`);
+    const detailEl = $(`margin-${currency}-detail`);
+    const margin = ((pvp - cost) / pvp) * 100;
+    pctEl.textContent = margin.toFixed(1) + '%';
+    pctEl.className = 'pct ' + (margin >= 0 ? 'positive' : 'negative');
+    const absMargin = pvp - cost;
+    const symbol = currency === 'eur' ? '€' : 'HK$';
+    detailEl.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + 
+        `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${absMargin.toFixed(2)} / unità`;
+    detailEl.className = 'margin-detail' + (margin < 0 ? ' negative' : '');
+}
+
+// ─── INIT ──────────────────────────────────────────────────────
+// Set initial state
+document.querySelector('[data-uom="PCS"]').classList.add('active');
+document.querySelector('[data-ubic="MTO"]').classList.add('active');
+document.querySelector('[data-temp="DRY"]').classList.add('active');
+document.querySelector('[data-area="NORD"]').classList.add('active');
+
+// Initial check
+checkCanCalc();
+
+// Rate hint
+$('eur-hkd-rate').addEventListener('input', function() {
+    const hint = $('rate-hint');
+    const val = parseFloat(this.value);
+    if (val && val !== C.EUR_TO_HKD) {
+        hint.textContent = `→ usando ${val.toFixed(4)}`;
+        hint.style.color = '#E8C97A';
+    } else {
+        hint.textContent = 'Lascia vuoto per usare il default 04/2026';
+        hint.style.color = 'rgba(196,135,59,0.6)';
+    }
+    // Update rate display in header
+    $('rate-display').textContent = (val || C.EUR_TO_HKD).toFixed(4);
+    clearResults();
+});
+
+// Listen for Enter key on inputs
+document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('keydown', e => {
+        if (e.key === 'Enter') {
+            const btn = $('calc-btn');
+            if (!btn.disabled) calculate();
+        }
+    });
+});
+</script>
 </body>
 </html>
