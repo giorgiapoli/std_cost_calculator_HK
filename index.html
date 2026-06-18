@@ -17,6 +17,7 @@
         .field label { display:block; font-size:11px; color:rgba(221,213,200,0.5); margin-bottom:5px; }
         .field input { width:100%; padding:9px 11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:14px; font-family:inherit; outline:none; }
         .field input:focus { border-color:rgba(196,135,59,0.5); }
+        .field .price-hint { font-size:9px; color:rgba(221,213,200,0.35); margin-top:2px; }
         .btn { padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; transition:all 0.2s; width:100%; text-align:center; }
         .btn.active { color:#EEE; background:rgba(196,135,59,0.15); border-color:#C4873B; }
         .btn-group { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
@@ -56,6 +57,39 @@
         .warn { font-size:10px; color:#E08040; margin-top:7px; }
         .hint { font-size:10px; color:rgba(196,135,59,0.6); margin-top:3px; }
         .disclaimer { margin-top:14px; padding:12px 16px; background:rgba(255,200,80,0.04); border:1px solid rgba(255,200,80,0.12); border-radius:8px; font-size:11px; color:rgba(221,213,200,0.4); }
+
+        /* Price fields group */
+        .price-fields-group {
+            border-top: 1px solid rgba(255,255,255,0.07);
+            margin-top: 8px;
+            padding-top: 10px;
+        }
+        .price-fields-group .price-field {
+            margin-bottom: 6px;
+        }
+        .price-fields-group .price-field label {
+            font-size: 10px;
+            color: rgba(221,213,200,0.4);
+        }
+        .price-fields-group .price-field input {
+            font-size: 13px;
+            padding: 6px 10px;
+        }
+        .price-field.hidden { display: none; }
+        .price-field.active-price {
+            border-left: 3px solid #C4873B;
+            padding-left: 10px;
+            background: rgba(196,135,59,0.05);
+            border-radius: 4px;
+        }
+        .price-field .used-label {
+            font-size: 9px;
+            color: #C4873B;
+            font-weight: bold;
+            display: inline-block;
+            margin-left: 6px;
+        }
+
         @media (max-width:600px) { .grid-2 { grid-template-columns:1fr; } .pvp-grid { grid-template-columns:1fr; } .header { padding:16px 20px; } .container { padding:20px 14px 40px; } }
     </style>
 </head>
@@ -93,15 +127,15 @@
             <div style="display:flex;flex-direction:column;gap:7px;">
                 <button class="btn-ubic active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
                     🔄 MTO — Cross-docking
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Costo In+Stock+Out per pallet</div>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Costo In+Stock+Out per pallet · usa prezzo DAP</div>
                 </button>
                 <button class="btn-ubic" data-ubic="FOR" onclick="setUbic('FOR')">
                     🚛 FOR — Franco fornitore
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Nessun costo handling aggiunto</div>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Nessun costo handling aggiunto · usa prezzo FCA</div>
                 </button>
                 <button class="btn-ubic" data-ubic="MTS" onclick="setUbic('MTS')">
                     🏭 MTS — Magazzino Unifreddo
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Deposito + Inbound + Picking</div>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)</div>
                 </button>
             </div>
         </div>
@@ -112,9 +146,28 @@
         <!-- PREZZO & CONTENENZA -->
         <div class="box">
             <div class="box-title">📦 Prezzo & Contenenza</div>
-            <div class="field">
-                <label id="priceLabel">Prezzo acquisto per PEZZO (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);font-style:italic;">(LISTINO FORNITORE)</span></label>
+            
+            <!-- Prezzo in uso (mostra solo quello attivo) -->
+            <div class="field" id="active-price-field">
+                <label id="priceLabel">Prezzo acquisto per PEZZO (€)</label>
                 <input type="number" id="purchasePrice" placeholder="es. 2.50" step="any" oninput="onInputChange()">
+                <div class="price-hint" id="priceHint">Fonte: DAP (lista fornitori)</div>
+            </div>
+
+            <!-- Tutti i prezzi (FCA, DAP, MTS) - visibili in base alla selezione -->
+            <div class="price-fields-group" id="price-fields-group">
+                <div class="price-field" id="price-fca">
+                    <label>FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span></label>
+                    <input type="number" id="price-fca-input" placeholder="es. 2.30" step="any" oninput="syncPrice()">
+                </div>
+                <div class="price-field" id="price-dap">
+                    <label>DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span></label>
+                    <input type="number" id="price-dap-input" placeholder="es. 2.50" step="any" oninput="syncPrice()">
+                </div>
+                <div class="price-field" id="price-mts">
+                    <label>MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(magazzino)</span></label>
+                    <input type="number" id="price-mts-input" placeholder="es. 2.70" step="any" oninput="syncPrice()">
+                </div>
             </div>
             
             <!-- Campo 1: Pezzi per cartone (solo per PCS) / Kg per cartone (solo per KG) -->
@@ -280,6 +333,56 @@ const C = {
     DEFAULT_PLT: { DRY: 25, FRESH: 23, FROZEN: 23 },
 };
 
+// ─── FUNZIONI PREZZO ──────────────────────────────────────────────
+
+function getActivePrice() {
+    const ubic = state.ubicazione;
+    const fca = parseFloat(document.getElementById('price-fca-input').value) || 0;
+    const dap = parseFloat(document.getElementById('price-dap-input').value) || 0;
+    const mts = parseFloat(document.getElementById('price-mts-input').value) || 0;
+    
+    let price = 0;
+    let source = '';
+    
+    if (ubic === 'FOR') {
+        price = fca;
+        source = 'FCA';
+    } else if (ubic === 'MTO') {
+        price = dap;
+        source = 'DAP';
+    } else if (ubic === 'MTS') {
+        if (mts > 0) {
+            price = mts;
+            source = 'MTS';
+        } else {
+            price = dap;
+            source = 'DAP (MTS=0)';
+        }
+    }
+    
+    return { price, source };
+}
+
+function syncPrice() {
+    // Aggiorna il campo prezzo attivo in base alla selezione
+    const activeField = document.getElementById('purchasePrice');
+    const hint = document.getElementById('priceHint');
+    const result = getActivePrice();
+    
+    activeField.value = result.price > 0 ? result.price : '';
+    hint.textContent = `Fonte: ${result.source}`;
+    
+    // Evidenzia il campo prezzo attivo
+    document.querySelectorAll('.price-field').forEach(el => el.classList.remove('active-price'));
+    const ubic = state.ubicazione;
+    const priceMap = { 'FOR': 'price-fca', 'MTO': 'price-dap', 'MTS': 'price-mts' };
+    const activeEl = document.getElementById(priceMap[ubic]);
+    if (activeEl) activeEl.classList.add('active-price');
+    
+    clearResults();
+    checkCanCalc();
+}
+
 // ─── FUNZIONI UI ───────────────────────────────────────────────
 function $(id) { return document.getElementById(id); }
 
@@ -353,6 +456,7 @@ function setUbic(ubic) {
             el.style.color = 'rgba(221,213,200,0.6)';
         }
     });
+    syncPrice();
     clearResults();
 }
 
@@ -431,7 +535,8 @@ function clearResults() {
 }
 
 function checkCanCalc() {
-    const price = parseFloat($('purchasePrice').value);
+    const result = getActivePrice();
+    const price = result.price;
     const uom = state.uom;
     let ok = false;
     
@@ -454,7 +559,10 @@ function checkCanCalc() {
 
 // ─── CALCOLO ────────────────────────────────────────────────────
 function calculate() {
-    const price = parseFloat($('purchasePrice').value);
+    const result = getActivePrice();
+    const price = result.price;
+    const priceSource = result.source;
+    
     const uom = state.uom;
     let unitsPerPlt = 0;
     
@@ -505,9 +613,10 @@ function calculate() {
     const step2Eur = step1Eur + warehousePerUnit;
     const step2Hkd = step2Eur * rate;
 
-    const result = {
+    const resultObj = {
         purchaseEur: price,
         purchaseHkd: price * rate,
+        priceSource: priceSource,
         fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
         warehousePerUnit, warehouseLabel,
         step1Eur, step1Hkd, step2Eur, step2Hkd,
@@ -515,8 +624,8 @@ function calculate() {
         rate,
     };
 
-    state.lastResult = result;
-    renderResults(result);
+    state.lastResult = resultObj;
+    renderResults(resultObj);
 }
 
 // ─── RENDER ─────────────────────────────────────────────────────
@@ -525,7 +634,7 @@ function renderResults(r) {
     $('resultHkd').textContent = 'HK$ ' + r.step2Hkd.toFixed(2);
 
     let rows = `
-        <div class="cost-row bold">Prezzo acquisto <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
+        <div class="cost-row bold">Prezzo acquisto (${r.priceSource}) <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
         <div class="divider"></div>
         <div class="cost-row">FOB + Nolo <span>€ ${r.fobPerUnit.toFixed(4)}</span></div>
         <div class="cost-row">Local Import Charges <span>€ ${r.licPerUnit.toFixed(4)}</span></div>
@@ -563,7 +672,6 @@ function formatAndSyncPVP(source) {
     const r = state.lastResult;
     
     if (source === 'eur') {
-        // L'utente sta digitando in EUR
         let rawValue = eurInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
         if (rawValue === '') {
             hkdInput.value = '';
@@ -579,7 +687,6 @@ function formatAndSyncPVP(source) {
             hkdInput.value = '';
         }
     } else {
-        // L'utente sta digitando in HKD
         let rawValue = hkdInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
         if (rawValue === '') {
             eurInput.value = '';
@@ -598,7 +705,6 @@ function formatAndSyncPVP(source) {
 }
 
 function formatNumber(num) {
-    // Formatta con punto come separatore delle migliaia e virgola per i decimali
     if (isNaN(num)) return '';
     const parts = num.toFixed(2).split('.');
     const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
@@ -629,7 +735,6 @@ function updateMarginDisplay(pvp, cost, suffix) {
         `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${abs.toFixed(2)} / unità`;
     detailEl2.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
     
-    // Aggiorna anche l'altro margine
     if (suffixKey === 'Eur' && state.lastResult) {
         const hkdPvp = parseFloat($('pvpHgk').value.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
         if (hkdPvp > 0) {
@@ -646,14 +751,17 @@ function updateMarginDisplay(pvp, cost, suffix) {
     }
 }
 
-// ─── MARGINE (legacy, mantenuto per compatibilità) ──────────────
-function calcMargin() {
-    // Gestito da formatAndSyncPVP
-}
+// ─── EVENT LISTENERS ───────────────────────────────────────────
+
+// Price fields listeners
+document.getElementById('price-fca-input').addEventListener('input', syncPrice);
+document.getElementById('price-dap-input').addEventListener('input', syncPrice);
+document.getElementById('price-mts-input').addEventListener('input', syncPrice);
 
 // ─── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
     updateUOMFields();
+    syncPrice();
     checkCanCalc();
     updateRate();
 });
