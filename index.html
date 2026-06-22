@@ -17,6 +17,7 @@
         .field label { display:block; font-size:11px; color:rgba(221,213,200,0.5); margin-bottom:5px; }
         .field input { width:100%; padding:9px 11px; background:rgba(255,255,255,0.06); border:1px solid rgba(255,255,255,0.1); border-radius:7px; color:#DDD5C8; font-size:14px; font-family:inherit; outline:none; }
         .field input:focus { border-color:rgba(196,135,59,0.5); }
+        .field input[readonly] { background:rgba(255,255,255,0.03); cursor:default; border-color:rgba(196,135,59,0.15); }
         .field .price-hint { font-size:9px; color:rgba(221,213,200,0.35); margin-top:2px; }
         .btn { padding:9px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; transition:all 0.2s; width:100%; text-align:center; }
         .btn.active { color:#EEE; background:rgba(196,135,59,0.15); border-color:#C4873B; }
@@ -117,6 +118,24 @@
             50% { opacity: 0.5; }
         }
 
+        /* Stile per il prezzo visualizzato */
+        .price-display {
+            font-size: 18px;
+            font-weight: bold;
+            color: #E8C97A;
+            padding: 8px 12px;
+            background: rgba(196,135,59,0.08);
+            border-radius: 6px;
+            border: 1px solid rgba(196,135,59,0.15);
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .price-display-empty {
+            color: rgba(221,213,200,0.3);
+            font-size: 14px;
+            font-weight: normal;
+        }
+
         @media (max-width:600px) { .grid-2 { grid-template-columns:1fr; } .pvp-grid { grid-template-columns:1fr; } .header { padding:16px 20px; } .container { padding:20px 14px 40px; } }
     </style>
 </head>
@@ -174,11 +193,13 @@
         <div class="box">
             <div class="box-title">📦 Prezzo & Contenenza</div>
             
-            <!-- Prezzo in uso -->
+            <!-- Prezzo in uso - SOLA VISUALIZZAZIONE -->
             <div class="field" id="active-price-field">
                 <label id="priceLabel">Prezzo acquisto per PEZZO (€)</label>
-                <input type="number" id="purchasePrice" placeholder="es. 2.50" step="any" oninput="onInputChange()">
-                <div class="price-hint" id="priceHint">Fonte: DAP</div>
+                <div class="price-display" id="priceDisplay">
+                    <span class="price-display-empty">— Inserisci un prezzo qui sotto —</span>
+                </div>
+                <div class="price-hint" id="priceHint">Inserisci il prezzo in uno dei campi sottostanti</div>
             </div>
 
             <!-- Tutti i prezzi (FCA, DAP, MTS) - sempre visibili, uno evidenziato -->
@@ -391,12 +412,40 @@ function getActivePrice() {
 }
 
 function syncPrice() {
-    const activeField = document.getElementById('purchasePrice');
+    const display = document.getElementById('priceDisplay');
     const hint = document.getElementById('priceHint');
     const result = getActivePrice();
+    const priceLabel = document.getElementById('priceLabel');
     
-    activeField.value = result.price > 0 ? result.price : '';
-    hint.textContent = `Fonte: ${result.source}`;
+    // Aggiorna il display del prezzo (SOLA VISUALIZZAZIONE)
+    if (result.price > 0) {
+        display.innerHTML = `€ ${result.price.toFixed(4)}`;
+        display.style.fontSize = '18px';
+        display.style.fontWeight = 'bold';
+        display.style.color = '#E8C97A';
+        hint.textContent = `✅ Fonte: ${result.source}`;
+        hint.style.color = 'rgba(196,135,59,0.7)';
+        
+        // Aggiorna anche l'etichetta con la fonte
+        const uom = state.uom;
+        let unitLabel = 'PEZZO';
+        if (uom === 'BOX') unitLabel = 'CARTONE/BOX';
+        else if (uom === 'KG') unitLabel = 'KG';
+        priceLabel.textContent = `Prezzo acquisto per ${unitLabel} (€) — Fonte: ${result.source}`;
+    } else {
+        display.innerHTML = `<span class="price-display-empty">— Inserisci un prezzo qui sotto —</span>`;
+        display.style.fontSize = '14px';
+        display.style.fontWeight = 'normal';
+        display.style.color = 'rgba(221,213,200,0.3)';
+        hint.textContent = 'Inserisci il prezzo in uno dei campi sottostanti';
+        hint.style.color = 'rgba(221,213,200,0.35)';
+        
+        const uom = state.uom;
+        let unitLabel = 'PEZZO';
+        if (uom === 'BOX') unitLabel = 'CARTONE/BOX';
+        else if (uom === 'KG') unitLabel = 'KG';
+        priceLabel.textContent = `Prezzo acquisto per ${unitLabel} (€)`;
+    }
     
     // Evidenzia il campo prezzo attivo
     document.querySelectorAll('.price-field').forEach(el => el.classList.remove('active-price'));
@@ -455,6 +504,7 @@ function updateUOMFields() {
         hint.textContent = 'Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.';
         updateDivisorHint();
     }
+    syncPrice();
 }
 
 function updateDivisorHint() {
