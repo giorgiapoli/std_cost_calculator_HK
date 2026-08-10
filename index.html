@@ -363,6 +363,15 @@
         <!-- Nolo aereo 4 tratte -->
         <div class="box">
             <div class="box-title">🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)</div>
+            <div class="field" style="margin-bottom:12px;">
+                <label>⚡ Preset nolo <span style="font-size:9px;color:rgba(221,213,200,0.35);">precompila le tratte, poi modificabili — utile se non hai le tariffe del fornitore</span></label>
+                <select class="air-select" id="air-preset" onchange="applyFreightPreset()" style="width:100%;">
+                    <option value="MANUAL" selected>✏️ Manuale (inserisco io le tariffe)</option>
+                    <option value="EU_AIR">🇪🇺 EU Aereo standard — 4 €/kg + 6 + 6 HKD (≈ 47,96 HKD/kg)</option>
+                    <option value="AU_AIR">🇦🇺 Australia Aereo — 1,8 AUD/kg + 6 + 6 HKD</option>
+                    <option value="LOCAL">🏠 Locale HK — nessun nolo (tutto 0)</option>
+                </select>
+            </div>
             <div class="grid-2">
                 <div class="field">
                     <label>① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span></label>
@@ -694,6 +703,26 @@ function toggleAirMarkup() {
 }
 
 function onAirChange() {
+    clearResults();
+    checkCanCalc();
+}
+
+// Preset nolo: precompila le 4 tratte con lo standard di fatto (modificabili)
+function applyFreightPreset() {
+    const p = $('air-preset').value;
+    const PRESETS = {
+        EU_AIR: { o: [0, 'EUR'], m: [4, 'EUR'],   d: [6, 'HKD'], a: [6, 'HKD'] },
+        AU_AIR: { o: [0, 'AUD'], m: [1.8, 'AUD'], d: [6, 'HKD'], a: [6, 'HKD'] },
+        LOCAL:  { o: [0, 'HKD'], m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
+    };
+    const c = PRESETS[p];
+    if (c) {
+        $('air-origin').value = c.o[0]; $('air-origin-cur').value = c.o[1];
+        $('air-main').value   = c.m[0]; $('air-main-cur').value   = c.m[1];
+        $('air-dest').value   = c.d[0]; $('air-dest-cur').value   = c.d[1];
+        $('air-acc').value    = c.a[0]; $('air-acc-cur').value    = c.a[1];
+    }
+    // MANUAL non tocca i campi
     clearResults();
     checkCanCalc();
 }
