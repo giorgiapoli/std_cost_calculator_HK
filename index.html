@@ -179,8 +179,8 @@
                 <div class="mode-sub">Modello a pallet/container · logica invariata</div>
             </button>
             <button class="btn-mode" id="mode-air" onclick="setMode('AIR')">
-                ✈️ Via Aerea (per Kg)
-                <div class="mode-sub">Peso × nolo/kg + prezzo×FX · modello BV</div>
+                ✈️ Via Aerea / Local
+                <div class="mode-sub">Aereo o locale HK · peso × nolo/kg + prezzo×FX · modello BV</div>
             </button>
         </div>
     </div>
@@ -350,13 +350,13 @@
             </div>
 
             <div class="box">
-                <div class="box-title">✈️ Tipo trasporto aereo</div>
+                <div class="box-title">🌡️ Temperatura di trasporto</div>
                 <div style="display:flex;flex-direction:column;gap:7px;">
-                    <button class="btn active" data-airtype="CH_AIR" onclick="setAirType('CH_AIR')" style="border-color:#3B8DC4;background:rgba(59,141,196,0.18);color:#EEE;">❄️ CH AIR — Fresco/Chilled</button>
-                    <button class="btn" data-airtype="DRY_AIR" onclick="setAirType('DRY_AIR')">🌾 DRY AIR — Secco</button>
-                    <button class="btn" data-airtype="FR_AIR" onclick="setAirType('FR_AIR')">🧊 FR AIR — Surgelato</button>
+                    <button class="btn active" data-airtype="DRY" onclick="setAirType('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.18);color:#EEE;">🌾 Dry (Secco)</button>
+                    <button class="btn" data-airtype="FRESH" onclick="setAirType('FRESH')">❄️ Fresh (Fresco)</button>
+                    <button class="btn" data-airtype="FROZEN" onclick="setAirType('FROZEN')">🧊 Frozen (Surgelato)</button>
                 </div>
-                <div class="hint">Categoria merce (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.</div>
+                <div class="hint">Vale sia per aereo che per locale HK (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.</div>
             </div>
         </div>
 
@@ -489,7 +489,7 @@
 
     <!-- ===================== AIR RESULTS ===================== -->
     <div id="airResults" style="display:none;margin-top:20px;">
-        <div style="font-size:10px;letter-spacing:3px;color:#4A9B9B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost Via Aerea</div>
+        <div style="font-size:10px;letter-spacing:3px;color:#4A9B9B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost Via Aerea / Local</div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
             <div class="result-card" style="border-color:rgba(74,155,155,0.4);">
@@ -547,7 +547,7 @@ const state = {
     hasAlcTax: false,
     lastResult: null,
     // AIR
-    airType: 'CH_AIR',    // CH_AIR | DRY_AIR | FR_AIR (etichetta merceologica)
+    airType: 'DRY',       // DRY | FRESH | FROZEN (temperatura di trasporto, aereo o locale)
     airMarkup: true,      // +2% (×1.02) come nel modello BV
     airResult: null,
 };
@@ -557,7 +557,7 @@ const AIR = {
     FX_DEFAULT: { HKD: 1, EUR: 8.99, USD: 7.85, AUD: 5.43, GBP: 10.41, CNY: 1.16 },
     MARKUP: 1.02,         // +2% concordato applicato su Prezzo×FX
     MARGINS: [0.20, 0.30, 0.40],
-    TYPE_LABEL: { CH_AIR: '❄️ CH AIR — Fresco', DRY_AIR: '🌾 DRY AIR — Secco', FR_AIR: '🧊 FR AIR — Surgelato' },
+    TYPE_LABEL: { DRY: '🌾 Dry (Secco)', FRESH: '❄️ Fresh (Fresco)', FROZEN: '🧊 Frozen (Surgelato)' },
 };
 
 // ─── COSTANTI ──────────────────────────────────────────────────
@@ -680,7 +680,7 @@ function setMode(mode) {
 
 function setAirType(t) {
     state.airType = t;
-    const colors = { CH_AIR: '#3B8DC4', DRY_AIR: '#C4873B', FR_AIR: '#7B3BC4' };
+    const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
     document.querySelectorAll('[data-airtype]').forEach(el => {
         const on = el.dataset.airtype === t;
         el.classList.toggle('active', on);
