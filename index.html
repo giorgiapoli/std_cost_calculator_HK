@@ -325,6 +325,21 @@
     <!-- ===================== AIR INPUTS ===================== -->
     <div id="airInputs" class="hidden">
 
+        <!-- Entità HOFF / BV -->
+        <div class="box" style="margin-bottom:14px;">
+            <div class="box-title">🏢 Entità (imposta i preset nolo consigliati)</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <button class="btn-mode active" id="ent-bv" onclick="setAirEntity('BV')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
+                    🅱️ BV — non-HOFF
+                    <div class="mode-sub">EU 4€ · dest 6 · acc 6</div>
+                </button>
+                <button class="btn-mode" id="ent-hoff" onclick="setAirEntity('HOFF')">
+                    Ⓗ HOFF
+                    <div class="mode-sub">EU 5€ · dest 10 · acc 0</div>
+                </button>
+            </div>
+        </div>
+
         <!-- Prezzo & Peso / Tipo aereo -->
         <div class="grid-2">
             <div class="box">
@@ -364,12 +379,9 @@
         <div class="box">
             <div class="box-title">🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)</div>
             <div class="field" style="margin-bottom:12px;">
-                <label>⚡ Preset nolo <span style="font-size:9px;color:rgba(221,213,200,0.35);">precompila le tratte, poi modificabili — utile se non hai le tariffe del fornitore</span></label>
+                <label>⚡ Preset nolo consigliati <span style="font-size:9px;color:rgba(221,213,200,0.35);">valori tipici per l'entità selezionata — modificabili, verifica col fornitore</span></label>
                 <select class="air-select" id="air-preset" onchange="applyFreightPreset()" style="width:100%;">
                     <option value="MANUAL" selected>✏️ Manuale (inserisco io le tariffe)</option>
-                    <option value="EU_AIR">🇪🇺 EU Aereo standard — 4 €/kg + 6 + 6 HKD (≈ 47,96 HKD/kg)</option>
-                    <option value="AU_AIR">🇦🇺 Australia Aereo — 1,8 AUD/kg + 6 + 6 HKD</option>
-                    <option value="LOCAL">🏠 Locale HK — nessun nolo (tutto 0)</option>
                 </select>
             </div>
             <div class="grid-2">
@@ -547,6 +559,7 @@ const state = {
     hasAlcTax: false,
     lastResult: null,
     // AIR
+    airEntity: 'BV',      // BV | HOFF (determina i preset nolo consigliati)
     airType: 'DRY',       // DRY | FRESH | FROZEN (temperatura di trasporto, aereo o locale)
     airMarkup: true,      // +2% (×1.02) come nel modello BV
     airResult: null,
@@ -558,6 +571,19 @@ const AIR = {
     MARKUP: 1.02,         // +2% concordato applicato su Prezzo×FX
     MARGINS: [0.20, 0.30, 0.40],
     TYPE_LABEL: { DRY: '🌾 Dry (Secco)', FRESH: '❄️ Fresh (Fresco)', FROZEN: '🧊 Frozen (Surgelato)' },
+    // Preset nolo consigliati per entità (valori tipici estratti dai fogli 04_Freight — da verificare col fornitore)
+    PRESETS: {
+        BV: {
+            EU:    { label: '🇪🇺 EU Aereo — 4€ + dest 6 + acc 6 HKD (≈ 47,96/kg)',  o: [0, 'EUR'],    m: [4, 'EUR'],   d: [6, 'HKD'], a: [6, 'HKD'] },
+            AU:    { label: '🇦🇺 Australia Aereo — 1,8 AUD + dest 6 + acc 6 (≈ 21,8/kg)', o: [0, 'AUD'], m: [1.8, 'AUD'], d: [6, 'HKD'], a: [6, 'HKD'] },
+            LOCAL: { label: '🏠 Locale HK — nessun nolo (tutto 0)',                  o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
+        },
+        HOFF: {
+            EU:    { label: '🇪🇺 EU Aereo — 5€ + dest 10 + acc 0 (≈ 54,95/kg)',      o: [0, 'EUR'],    m: [5, 'EUR'],   d: [10, 'HKD'], a: [0, 'HKD'] },
+            AU:    { label: '🇦🇺 Australia Aereo — 0,15+1,6 AUD + dest 2,6 (≈ 12,1/kg)', o: [0.15, 'AUD'], m: [1.6, 'AUD'], d: [2.6, 'HKD'], a: [0, 'HKD'] },
+            LOCAL: { label: '🏠 Locale HK — nessun nolo (tutto 0)',                  o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
+        },
+    },
 };
 
 // ─── COSTANTI ──────────────────────────────────────────────────
@@ -707,20 +733,44 @@ function onAirChange() {
     checkCanCalc();
 }
 
-// Preset nolo: precompila le 4 tratte con lo standard di fatto (modificabili)
+// Entità HOFF / BV: cambia i preset nolo consigliati
+function setAirEntity(e) {
+    state.airEntity = e;
+    const bv = $('ent-bv'), hf = $('ent-hoff');
+    const on = (btn, c) => { btn.classList.add('active'); btn.style.borderColor = c; btn.style.background = c + '22'; btn.style.color = '#EEE'; };
+    const off = (btn) => { btn.classList.remove('active'); btn.style.borderColor = 'rgba(255,255,255,0.09)'; btn.style.background = 'rgba(255,255,255,0.04)'; btn.style.color = 'rgba(221,213,200,0.6)'; };
+    if (e === 'BV') { on(bv, '#4A8C9B'); off(hf); } else { on(hf, '#C4873B'); off(bv); }
+    rebuildPresetOptions();
+    clearResults();
+    checkCanCalc();
+}
+
+// Ricostruisce il menu preset in base all'entità selezionata
+function rebuildPresetOptions() {
+    const sel = $('air-preset');
+    const P = AIR.PRESETS[state.airEntity] || {};
+    sel.innerHTML = '<option value="MANUAL">✏️ Manuale (inserisco io le tariffe)</option>';
+    ['EU', 'AU', 'LOCAL'].forEach(k => {
+        if (P[k]) {
+            const o = document.createElement('option');
+            o.value = k; o.textContent = P[k].label;
+            sel.appendChild(o);
+        }
+    });
+    sel.value = 'MANUAL';
+}
+
+// Preset nolo: precompila le 4 tratte con i valori tipici dell'entità (modificabili)
 function applyFreightPreset() {
     const p = $('air-preset').value;
-    const PRESETS = {
-        EU_AIR: { o: [0, 'EUR'], m: [4, 'EUR'],   d: [6, 'HKD'], a: [6, 'HKD'] },
-        AU_AIR: { o: [0, 'AUD'], m: [1.8, 'AUD'], d: [6, 'HKD'], a: [6, 'HKD'] },
-        LOCAL:  { o: [0, 'HKD'], m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
-    };
-    const c = PRESETS[p];
-    if (c) {
-        $('air-origin').value = c.o[0]; $('air-origin-cur').value = c.o[1];
-        $('air-main').value   = c.m[0]; $('air-main-cur').value   = c.m[1];
-        $('air-dest').value   = c.d[0]; $('air-dest-cur').value   = c.d[1];
-        $('air-acc').value    = c.a[0]; $('air-acc-cur').value    = c.a[1];
+    if (p !== 'MANUAL') {
+        const c = (AIR.PRESETS[state.airEntity] || {})[p];
+        if (c) {
+            $('air-origin').value = c.o[0]; $('air-origin-cur').value = c.o[1];
+            $('air-main').value   = c.m[0]; $('air-main-cur').value   = c.m[1];
+            $('air-dest').value   = c.d[0]; $('air-dest-cur').value   = c.d[1];
+            $('air-acc').value    = c.a[0]; $('air-acc-cur').value    = c.a[1];
+        }
     }
     // MANUAL non tocca i campi
     clearResults();
@@ -1206,6 +1256,7 @@ document.getElementById('price-mts-input').addEventListener('input', syncPrice);
 document.addEventListener('DOMContentLoaded', function() {
     updateUOMFields();
     syncPrice();
+    setAirEntity('BV');
     setMode('SEA');
     checkCanCalc();
     updateRate();
