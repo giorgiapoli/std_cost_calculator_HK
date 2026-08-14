@@ -29,6 +29,8 @@
         .btn-ubic.active { color:#EEE; }
         .btn-option { padding:10px 12px; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.09); border-radius:7px; color:rgba(221,213,200,0.6); cursor:pointer; font-family:inherit; font-size:12px; text-align:center; transition:all 0.2s; }
         .btn-option.active { color:#EEE; }
+        .lang-btn { padding:7px 12px; background:rgba(255,255,255,0.06); border:1px solid rgba(196,135,59,0.3); border-radius:20px; color:#DDD5C8; cursor:pointer; font-family:inherit; font-size:12px; font-weight:bold; transition:all 0.2s; display:flex; align-items:center; gap:6px; }
+        .lang-btn:hover { background:rgba(196,135,59,0.15); border-color:#C4873B; }
         .calc-btn { width:100%; padding:15px; background:linear-gradient(135deg,#C4873B,#1A4060); border:none; border-radius:10px; color:#fff; font-size:14px; font-weight:bold; letter-spacing:1px; font-family:inherit; cursor:pointer; transition:all 0.3s; }
         .calc-btn:disabled { background:rgba(255,255,255,0.05); color:rgba(255,255,255,0.25); cursor:not-allowed; box-shadow:none; }
         .calc-btn:not(:disabled) { box-shadow:0 8px 28px rgba(196,135,59,0.35); }
@@ -163,8 +165,9 @@
         <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;">Hong Kong Branch · Inalca Food & Beverage</div>
         <div style="font-size:21px;font-weight:bold;line-height:1.2;">Standard Cost Estimator</div>
     </div>
-    <div style="margin-left:auto;text-align:right;font-size:11px;color:rgba(255,255,255,0.3);">
-        EUR/HKD: <strong id="rateDisplay">9.1437</strong><br>Modello 04/2026
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()" style="margin-left:auto;"><span id="langFlag">🇬🇧</span> <span id="langLabel">English</span></button>
+    <div style="text-align:right;font-size:11px;color:rgba(255,255,255,0.3);">
+        EUR/HKD: <strong id="rateDisplay">9.1437</strong><br><span data-i18n="model_label">Modello 04/2026</span>
     </div>
 </div>
 
@@ -172,148 +175,138 @@
 
     <!-- MODE: SEA / AIR -->
     <div class="box" style="margin-bottom:14px;">
-        <div class="box-title">🚚 Modalità di trasporto</div>
+        <div class="box-title" data-i18n="transport_mode">🚚 Modalità di trasporto</div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
             <button class="btn-mode" id="mode-sea" onclick="setMode('SEA')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
-                🚢 Via Mare (Container)
-                <div class="mode-sub">Modello a pallet/container · logica invariata</div>
+                <span data-i18n="mode_sea_title">🚢 Via Mare (Container)</span>
+                <div class="mode-sub" data-i18n="mode_sea_sub">Modello a pallet/container · logica invariata</div>
             </button>
             <button class="btn-mode" id="mode-air" onclick="setMode('AIR')">
-                ✈️ Via Aerea / Local
-                <div class="mode-sub">Aereo o locale HK · peso × nolo/kg + prezzo×FX · modello BV</div>
+                <span data-i18n="mode_air_title">✈️ Via Aerea / Local</span>
+                <div class="mode-sub" data-i18n="mode_air_sub">Aereo o locale HK · peso × nolo/kg + prezzo×FX · modello BV</div>
             </button>
         </div>
     </div>
 
-    <!-- ===================== SEA INPUTS (INVARIATI) ===================== -->
+    <!-- ===================== SEA INPUTS ===================== -->
     <div id="seaInputs">
 
-    <!-- ROW 1: UOM + UBICAZIONE -->
     <div class="grid-2">
         <!-- UOM -->
         <div class="box">
-            <div class="box-title">📐 Unità di Misura (UOM)</div>
+            <div class="box-title" data-i18n="uom_title">📐 Unità di Misura (UOM)</div>
             <div class="btn-group">
                 <button class="btn active" data-uom="PCS" onclick="setUOM('PCS')">🔢 PCS</button>
                 <button class="btn" data-uom="BOX" onclick="setUOM('BOX')">📦 BOX</button>
                 <button class="btn" data-uom="KG" onclick="setUOM('KG')">⚖️ KG</button>
             </div>
-            <div class="hint" id="uomHint">Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.</div>
+            <div class="hint" id="uomHint"></div>
         </div>
 
-        <!-- UBICAZIONE (MTO/MTS/FOR) -->
+        <!-- UBICAZIONE -->
         <div class="box">
-            <div class="box-title">🏭 Gestione magazzino (Ubicazione)</div>
+            <div class="box-title" data-i18n="ubic_title">🏭 Gestione magazzino (Ubicazione)</div>
             <div style="display:flex;flex-direction:column;gap:7px;">
                 <button class="btn-ubic active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
-                    🔄 MTO — Cross-docking
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Costo In+Stock+Out per pallet · usa prezzo DAP</div>
+                    <span data-i18n="ubic_mto_title">🔄 MTO — Cross-docking</span>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_mto_sub">Costo In+Stock+Out per pallet · usa prezzo DAP</div>
                 </button>
                 <button class="btn-ubic" data-ubic="FOR" onclick="setUbic('FOR')">
-                    🚛 FOR — Franco fornitore
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Nessun costo handling aggiunto · usa prezzo FCA</div>
+                    <span data-i18n="ubic_for_title">🚛 FOR — Franco fornitore</span>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_for_sub">Nessun costo handling aggiunto · usa prezzo FCA</div>
                 </button>
                 <button class="btn-ubic" data-ubic="MTS" onclick="setUbic('MTS')">
-                    🏭 MTS — Magazzino Unifreddo
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);">Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)</div>
+                    <span data-i18n="ubic_mts_title">🏭 MTS — Magazzino Unifreddo</span>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_mts_sub">Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)</div>
                 </button>
             </div>
         </div>
     </div>
 
-    <!-- ROW 2: PREZZO + CONTENENZA / TEMPERATURA + AREA -->
     <div class="grid-2">
         <!-- PREZZO & CONTENENZA -->
         <div class="box">
-            <div class="box-title">📦 Prezzo & Contenenza</div>
-            
-            <!-- Prezzo in uso - SOLA VISUALIZZAZIONE -->
+            <div class="box-title" data-i18n="price_pack_title">📦 Prezzo & Contenenza</div>
+
             <div class="field" id="active-price-field">
-                <label id="priceLabel">Prezzo acquisto per PEZZO (€)</label>
+                <label id="priceLabel"></label>
                 <div class="price-display" id="priceDisplay">
-                    <span class="price-display-empty">— Inserisci un prezzo qui sotto —</span>
+                    <span class="price-display-empty" id="priceDisplayEmpty"></span>
                 </div>
-                <div class="price-hint" id="priceHint">Inserisci il prezzo in uno dei campi sottostanti</div>
+                <div class="price-hint" id="priceHint"></div>
             </div>
 
-            <!-- Tutti i prezzi (FCA, DAP, MTS) - sempre visibili, uno evidenziato -->
             <div class="price-fields-group" id="price-fields-group">
                 <div class="price-field" id="price-fca">
-                    <label>FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span></label>
+                    <label data-i18n-html="lbl_fca">FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span></label>
                     <input type="number" id="price-fca-input" placeholder="es. 2.30" step="any" oninput="syncPrice()">
                 </div>
                 <div class="price-field active-price" id="price-dap">
-                    <label>DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span></label>
+                    <label data-i18n-html="lbl_dap">DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span></label>
                     <input type="number" id="price-dap-input" placeholder="es. 2.50" step="any" oninput="syncPrice()">
                 </div>
                 <div class="price-field" id="price-mts">
-                    <label>MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(magazzino)</span></label>
+                    <label data-i18n-html="lbl_mts">MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(magazzino)</span></label>
                     <input type="number" id="price-mts-input" placeholder="es. 2.70" step="any" oninput="syncPrice()">
                 </div>
             </div>
-            
-            <!-- Campo 1: Pezzi per cartone (solo per PCS) / Kg per cartone (solo per KG) -->
+
             <div class="field" id="qtyField">
-                <label id="qtyLabel">Pezzi per cartone</label>
+                <label id="qtyLabel"></label>
                 <input type="number" id="qtyPerBox" placeholder="es. 12" step="any" oninput="onInputChange()">
             </div>
 
-            <!-- Campo 2: Cartoni per pallet (solo per PCS e BOX) -->
             <div class="field" id="boxField">
-                <label id="boxLabel">Cartoni per pallet</label>
+                <label id="boxLabel"></label>
                 <input type="number" id="boxPerPallet" placeholder="es. 70" step="any" oninput="onInputChange()">
                 <div class="hint" id="divisorHint"></div>
             </div>
 
-            <!-- Campo 3: Kg per pallet (solo per KG) -->
             <div class="field hidden" id="kgPerPalletField">
-                <label>⚖️ Kg per pallet</label>
+                <label data-i18n="lbl_kg_per_pallet">⚖️ Kg per pallet</label>
                 <input type="number" id="kgPerPallet" placeholder="es. 720" step="any" oninput="onInputChange()">
-                <div class="hint">Peso totale del pallet in kg (es: 4kg/box × 180 box/pallet = 720kg)</div>
+                <div class="hint" data-i18n="hint_kg_per_pallet">Peso totale del pallet in kg (es: 4kg/box × 180 box/pallet = 720kg)</div>
             </div>
 
             <div class="field">
-                <label>Pallet per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span></label>
+                <label data-i18n-html="lbl_plt_container">Pallet per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span></label>
                 <input type="number" id="pltPerContainer" placeholder="25" step="any" oninput="onInputChange()">
             </div>
             <div class="field">
-                <label>Tasso di cambio EUR → HKD <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 9.1437)</span></label>
+                <label data-i18n-html="lbl_fx">Tasso di cambio EUR → HKD <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 9.1437)</span></label>
                 <input type="number" id="eurHkdRate" placeholder="9.1437" step="any" value="9.1437" oninput="onInputChange(); updateRate()">
             </div>
         </div>
 
         <!-- TEMPERATURA + AREA -->
         <div>
-            <!-- TEMPERATURA -->
             <div class="box">
-                <div class="box-title">🌡️ Temperatura</div>
+                <div class="box-title" data-i18n="temp_title">🌡️ Temperatura</div>
                 <div style="display:flex;flex-direction:column;gap:7px;">
-                    <button class="btn active" data-temp="DRY" onclick="setTemp('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.15);color:#EEE;">🌾 Dry (Secco)</button>
-                    <button class="btn" data-temp="FRESH" onclick="setTemp('FRESH')">❄️ Fresh (+15°C / +4°C)</button>
-                    <button class="btn" data-temp="FROZEN" onclick="setTemp('FROZEN')">🧊 Frozen (−18°C)</button>
+                    <button class="btn active" data-temp="DRY" onclick="setTemp('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.15);color:#EEE;" data-i18n="temp_dry">🌾 Dry (Secco)</button>
+                    <button class="btn" data-temp="FRESH" onclick="setTemp('FRESH')" data-i18n="temp_fresh">❄️ Fresh (+15°C / +4°C)</button>
+                    <button class="btn" data-temp="FROZEN" onclick="setTemp('FROZEN')" data-i18n="temp_frozen">🧊 Frozen (−18°C)</button>
                 </div>
             </div>
 
-            <!-- AREA -->
             <div class="box">
-                <div class="box-title">📍 Area fornitore</div>
+                <div class="box-title" data-i18n="area_title">📍 Area fornitore</div>
                 <div class="btn-area-group">
-                    <button class="btn-area active" data-area="NORD" onclick="setArea('NORD')">Nord</button>
-                    <button class="btn-area" data-area="CENTRO" onclick="setArea('CENTRO')">Centro</button>
-                    <button class="btn-area" data-area="SUD" onclick="setArea('SUD')">Sud</button>
+                    <button class="btn-area active" data-area="NORD" onclick="setArea('NORD')" data-i18n="area_nord">Nord</button>
+                    <button class="btn-area" data-area="CENTRO" onclick="setArea('CENTRO')" data-i18n="area_centro">Centro</button>
+                    <button class="btn-area" data-area="SUD" onclick="setArea('SUD')" data-i18n="area_sud">Sud</button>
                 </div>
                 <div class="warn" id="fobWarn" style="display:none;"></div>
             </div>
 
-            <!-- OPZIONI -->
             <div class="box">
-                <div class="box-title">⚙️ Voci opzionali</div>
+                <div class="box-title" data-i18n="options_title">⚙️ Voci opzionali</div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;">
-                    <div class="btn-option" id="certBtn" onclick="toggleCert()" style="text-align:center;">✅ Health Certificate</div>
-                    <div class="btn-option" id="alcBtn" onclick="toggleAlc()" style="text-align:center;">🍷 Tassa alcolici</div>
+                    <div class="btn-option" id="certBtn" onclick="toggleCert()" style="text-align:center;" data-i18n="opt_cert">✅ Health Certificate</div>
+                    <div class="btn-option" id="alcBtn" onclick="toggleAlc()" style="text-align:center;" data-i18n="opt_alc">🍷 Tassa alcolici</div>
                 </div>
                 <div class="field hidden" id="alcTaxField" style="margin-top:10px;">
-                    <label>Tassa alcolici (€ / unità)</label>
+                    <label data-i18n="lbl_alc_tax">Tassa alcolici (€ / unità)</label>
                     <input type="number" id="alcTaxPerUnit" placeholder="es. 1.50" step="any" oninput="onInputChange()">
                 </div>
             </div>
@@ -327,7 +320,7 @@
 
         <!-- Entità HOFF / BV -->
         <div class="box" style="margin-bottom:14px;">
-            <div class="box-title">🏢 Entità (imposta i preset nolo consigliati)</div>
+            <div class="box-title" data-i18n="entity_title">🏢 Entità (imposta i preset nolo consigliati)</div>
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <button class="btn-mode active" id="ent-bv" onclick="setAirEntity('BV')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
                     🅱️ BV — non-HOFF
@@ -340,12 +333,11 @@
             </div>
         </div>
 
-        <!-- Prezzo & Peso / Tipo aereo -->
         <div class="grid-2">
             <div class="box">
-                <div class="box-title">📦 Prezzo acquisto & Peso</div>
+                <div class="box-title" data-i18n="air_price_weight_title">📦 Prezzo acquisto & Peso</div>
                 <div class="field">
-                    <label>Prezzo acquisto per unità</label>
+                    <label data-i18n="air_price_label">Prezzo acquisto per unità</label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-price" placeholder="es. 10.00" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-price-cur" onchange="onAirChange()">
@@ -354,39 +346,38 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>⚖️ Peso lordo per unità (kg / UoM)</label>
+                    <label data-i18n="air_weight_label">⚖️ Peso lordo per unità (kg / UoM)</label>
                     <input type="number" class="air-input" id="air-weight" placeholder="es. 0.5" step="any" oninput="onAirChange()">
-                    <div class="hint">Peso lordo del singolo pezzo/cartone venduto — anagrafica BC: <em>Gross Weight KG/UoM</em>.</div>
+                    <div class="hint" data-i18n-html="air_weight_hint">Peso lordo del singolo pezzo/cartone venduto — anagrafica BC: <em>Gross Weight KG/UoM</em>.</div>
                 </div>
                 <div class="field" style="margin-bottom:0;">
-                    <div class="btn-option active" id="air-markup-btn" onclick="toggleAirMarkup()" style="text-align:left;border-color:#4A9B6C;background:rgba(74,155,108,0.15);color:#EEE;">✅ Maggiorazione +2% (×1.02) — modello</div>
-                    <div class="hint">Applicata su Prezzo×FX. Disattivabile per confronto (riunione test).</div>
+                    <div class="btn-option active" id="air-markup-btn" onclick="toggleAirMarkup()" style="text-align:left;border-color:#4A9B6C;background:rgba(74,155,108,0.15);color:#EEE;"></div>
+                    <div class="hint" data-i18n="air_markup_hint">Applicata su Prezzo×FX. Disattivabile per confronto (riunione test).</div>
                 </div>
             </div>
 
             <div class="box">
-                <div class="box-title">🌡️ Temperatura di trasporto</div>
+                <div class="box-title" data-i18n="air_temp_title">🌡️ Temperatura di trasporto</div>
                 <div style="display:flex;flex-direction:column;gap:7px;">
-                    <button class="btn active" data-airtype="DRY" onclick="setAirType('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.18);color:#EEE;">🌾 Dry (Secco)</button>
-                    <button class="btn" data-airtype="FRESH" onclick="setAirType('FRESH')">❄️ Fresh (Fresco)</button>
-                    <button class="btn" data-airtype="FROZEN" onclick="setAirType('FROZEN')">🧊 Frozen (Surgelato)</button>
+                    <button class="btn active" data-airtype="DRY" onclick="setAirType('DRY')" style="border-color:#C4873B;background:rgba(196,135,59,0.18);color:#EEE;" data-i18n="air_temp_dry">🌾 Dry (Secco)</button>
+                    <button class="btn" data-airtype="FRESH" onclick="setAirType('FRESH')" data-i18n="air_temp_fresh">❄️ Fresh (Fresco)</button>
+                    <button class="btn" data-airtype="FROZEN" onclick="setAirType('FROZEN')" data-i18n="air_temp_frozen">🧊 Frozen (Surgelato)</button>
                 </div>
-                <div class="hint">Vale sia per aereo che per locale HK (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.</div>
+                <div class="hint" data-i18n="air_temp_hint">Vale sia per aereo che per locale HK (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.</div>
             </div>
         </div>
 
-        <!-- Nolo aereo 4 tratte -->
         <div class="box">
-            <div class="box-title">🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)</div>
+            <div class="box-title" data-i18n="air_freight_title">🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)</div>
             <div class="field" style="margin-bottom:12px;">
-                <label>⚡ Preset nolo consigliati <span style="font-size:9px;color:rgba(221,213,200,0.35);">valori tipici per l'entità selezionata — modificabili, verifica col fornitore</span></label>
+                <label data-i18n-html="air_preset_label">⚡ Preset nolo consigliati <span style="font-size:9px;color:rgba(221,213,200,0.35);">valori tipici per l'entità selezionata — modificabili, verifica col fornitore</span></label>
                 <select class="air-select" id="air-preset" onchange="applyFreightPreset()" style="width:100%;">
                     <option value="MANUAL" selected>✏️ Manuale (inserisco io le tariffe)</option>
                 </select>
             </div>
             <div class="grid-2">
                 <div class="field">
-                    <label>① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span></label>
+                    <label data-i18n-html="air_leg_origin">① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-origin" placeholder="0" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-origin-cur" onchange="onAirChange()">
@@ -395,7 +386,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span></label>
+                    <label data-i18n-html="air_leg_main">② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-main" placeholder="es. 4" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-main-cur" onchange="onAirChange()">
@@ -404,7 +395,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span></label>
+                    <label data-i18n-html="air_leg_dest">③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-dest" placeholder="es. 6" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-dest-cur" onchange="onAirChange()">
@@ -413,7 +404,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label>④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori)</span></label>
+                    <label data-i18n-html="air_leg_acc">④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-acc" placeholder="es. 6" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-acc-cur" onchange="onAirChange()">
@@ -424,9 +415,8 @@
             </div>
         </div>
 
-        <!-- FX rates -->
         <div class="box">
-            <div class="box-title">💱 Tassi di cambio → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(foglio 03_FX_Rates · modificabili)</span></div>
+            <div class="box-title" data-i18n-html="air_fx_title">💱 Tassi di cambio → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(foglio 03_FX_Rates · modificabili)</span></div>
             <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:8px;">
                 <div><label style="font-size:10px;color:rgba(221,213,200,0.5);display:block;margin-bottom:4px;">EUR</label><input type="number" class="air-input" id="fx-EUR" value="8.99" step="any" oninput="onAirChange()"></div>
                 <div><label style="font-size:10px;color:rgba(221,213,200,0.5);display:block;margin-bottom:4px;">USD</label><input type="number" class="air-input" id="fx-USD" value="7.85" step="any" oninput="onAirChange()"></div>
@@ -434,123 +424,369 @@
                 <div><label style="font-size:10px;color:rgba(221,213,200,0.5);display:block;margin-bottom:4px;">GBP</label><input type="number" class="air-input" id="fx-GBP" value="10.41" step="any" oninput="onAirChange()"></div>
                 <div><label style="font-size:10px;color:rgba(221,213,200,0.5);display:block;margin-bottom:4px;">CNY</label><input type="number" class="air-input" id="fx-CNY" value="1.16" step="any" oninput="onAirChange()"></div>
             </div>
-            <div class="hint">HKD = 1 (valuta base). Aggiorna i tassi se il modello FX cambia.</div>
+            <div class="hint" data-i18n="air_fx_hint">HKD = 1 (valuta base). Aggiorna i tassi se il modello FX cambia.</div>
         </div>
 
     </div><!-- /airInputs -->
 
-    <!-- CALCOLA -->
-    <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled>Completa i campi per calcolare</button>
+    <button class="calc-btn" id="calcBtn" onclick="calculate()" disabled></button>
 
-    <!-- RISULTATI -->
+    <!-- RISULTATI SEA -->
     <div id="results" style="display:none;margin-top:20px;">
-        <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost 2</div>
-        
+        <div style="font-size:10px;letter-spacing:3px;color:#C4873B;text-transform:uppercase;margin-bottom:14px;" data-i18n="results_title">✦ Risultati — Standard Cost 2</div>
+
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;" id="bigResults">
             <div class="result-card" style="border-color:rgba(196,135,59,0.3);">
                 <div class="label">Standard Cost 2</div>
-                <div class="sub">EURO · per unità</div>
+                <div class="sub" data-i18n="card_euro_unit">EURO · per unità</div>
                 <div class="value" id="resultEur">€ 0.00</div>
             </div>
             <div class="result-card" style="border-color:rgba(74,155,155,0.3);">
                 <div class="label">Standard Cost 2</div>
-                <div class="sub">HKD · per unità</div>
+                <div class="sub" data-i18n="card_hkd_unit">HKD · per unità</div>
                 <div class="value" style="color:#4A9B9B;" id="resultHkd">HK$ 0.00</div>
             </div>
         </div>
 
         <div class="box" id="detailBox">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;">DETTAGLIO COSTI · per unità</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;" data-i18n="cost_detail_unit">DETTAGLIO COSTI · per unità</div>
             <div id="detailRows"></div>
         </div>
 
-        <!-- PVP -->
         <div class="pvp-section">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;">💰 Prezzo di Vendita & Margine</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;" data-i18n="pvp_title">💰 Prezzo di Vendita & Margine</div>
             <div class="pvp-grid">
                 <div class="pvp-field">
-                    <label>Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
+                    <label data-i18n-html="pvp_eur_label">Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
                     <div class="input-wrapper">
                         <span class="currency-symbol">€</span>
                         <input type="text" id="pvpEur" placeholder="0,00" oninput="formatAndSyncPVP('eur')" onfocus="this.select()">
                     </div>
                     <div class="margin-box">
-                        <span>Margine %</span>
+                        <span data-i18n="margin_pct">Margine %</span>
                         <span class="pct" id="marginEurPct">—</span>
                     </div>
                     <div class="margin-detail" id="marginEurDetail" style="color:rgba(221,213,200,0.35);"></div>
                 </div>
                 <div class="pvp-field">
-                    <label>Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
+                    <label data-i18n-html="pvp_hkd_label">Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
                     <div class="input-wrapper">
                         <span class="currency-symbol">HK$</span>
                         <input type="text" id="pvpHgk" placeholder="0,00" oninput="formatAndSyncPVP('hkd')" onfocus="this.select()">
                     </div>
                     <div class="margin-box">
-                        <span>Margine %</span>
+                        <span data-i18n="margin_pct">Margine %</span>
                         <span class="pct" id="marginHgkPct">—</span>
                     </div>
                     <div class="margin-detail" id="marginHgkDetail" style="color:rgba(221,213,200,0.35);"></div>
                 </div>
             </div>
-            <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;">💡 Inserisci il prezzo in EUR o HKD, l'altro campo si aggiorna automaticamente.</div>
+            <div style="margin-top:10px;font-size:10px;color:rgba(221,213,200,0.3);text-align:center;" data-i18n="pvp_hint">💡 Inserisci il prezzo in EUR o HKD, l'altro campo si aggiorna automaticamente.</div>
         </div>
 
-        <div class="disclaimer">⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.</div>
+        <div class="disclaimer" data-i18n-html="disclaimer_sea">⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.</div>
     </div>
 
-    <!-- ===================== AIR RESULTS ===================== -->
+    <!-- RISULTATI AIR -->
     <div id="airResults" style="display:none;margin-top:20px;">
-        <div style="font-size:10px;letter-spacing:3px;color:#4A9B9B;text-transform:uppercase;margin-bottom:14px;">✦ Risultati — Standard Cost Via Aerea / Local</div>
+        <div style="font-size:10px;letter-spacing:3px;color:#4A9B9B;text-transform:uppercase;margin-bottom:14px;" data-i18n="air_results_title">✦ Risultati — Standard Cost Via Aerea / Local</div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;">
             <div class="result-card" style="border-color:rgba(74,155,155,0.4);">
-                <div class="label">Standard Cost (Air)</div>
-                <div class="sub">HKD · per unità</div>
+                <div class="label" data-i18n="air_card_std">Standard Cost (Air)</div>
+                <div class="sub" data-i18n="card_hkd_unit">HKD · per unità</div>
                 <div class="value" style="color:#4A9B9B;" id="airResultHkd">HK$ 0.00</div>
             </div>
             <div class="result-card" style="border-color:rgba(196,135,59,0.3);">
-                <div class="label">Nolo aereo totale</div>
-                <div class="sub">HKD · per kg</div>
+                <div class="label" data-i18n="air_card_freight">Nolo aereo totale</div>
+                <div class="sub" data-i18n="card_hkd_kg">HKD · per kg</div>
                 <div class="value" id="airFreightKg">HK$ 0.00</div>
             </div>
         </div>
 
         <div class="box">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;">DETTAGLIO COSTI · per unità (HKD)</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(221,213,200,0.45);margin-bottom:12px;" data-i18n="cost_detail_unit_hkd">DETTAGLIO COSTI · per unità (HKD)</div>
             <div id="airDetailRows"></div>
         </div>
 
         <div class="box">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;">🎯 Prezzo di vendita suggerito (per margine target)</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;" data-i18n="air_suggested_title">🎯 Prezzo di vendita suggerito (per margine target)</div>
             <div id="airSuggested" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"></div>
         </div>
 
         <div class="pvp-section">
-            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;">💰 Margine su Prezzo di Vendita (HKD)</div>
+            <div style="font-size:10px;letter-spacing:2px;color:rgba(196,135,59,0.75);text-transform:uppercase;margin-bottom:12px;" data-i18n="air_margin_title">💰 Margine su Prezzo di Vendita (HKD)</div>
             <div class="pvp-field">
-                <label>Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
+                <label data-i18n-html="pvp_hkd_label">Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span></label>
                 <div class="input-wrapper">
                     <span class="currency-symbol">HK$</span>
                     <input type="text" id="airPvp" placeholder="0,00" oninput="airMargin()" onfocus="this.select()">
                 </div>
                 <div class="margin-box">
-                    <span>Margine %</span>
+                    <span data-i18n="margin_pct">Margine %</span>
                     <span class="pct" id="airMarginPct">—</span>
                 </div>
                 <div class="margin-detail" id="airMarginDetail" style="color:rgba(221,213,200,0.35);"></div>
             </div>
         </div>
 
-        <div class="disclaimer">⚠️ <strong>Nota:</strong> Calcolo via aerea basato sul modello BV — <em>Std Cost = Prezzo×FX×(1+markup) + Nolo/kg × Peso lordo</em>. Non include voci sea (FOB, LIC, VGM, pallet, magazzino). Verificare sempre con il file Excel prima del caricamento su NAV.</div>
+        <div class="disclaimer" data-i18n-html="disclaimer_air">⚠️ <strong>Nota:</strong> Calcolo via aerea basato sul modello BV — <em>Std Cost = Prezzo×FX×(1+markup) + Nolo/kg × Peso lordo</em>. Non include voci sea (FOB, LIC, VGM, pallet, magazzino). Verificare sempre con il file Excel prima del caricamento su NAV.</div>
     </div>
 
 </div>
 
 <script>
+// ─── TRADUZIONI ─────────────────────────────────────────────────
+const T = {
+  it: {
+    model_label: "Modello 04/2026",
+    transport_mode: "🚚 Modalità di trasporto",
+    mode_sea_title: "🚢 Via Mare (Container)",
+    mode_sea_sub: "Modello a pallet/container · logica invariata",
+    mode_air_title: "✈️ Via Aerea / Local",
+    mode_air_sub: "Aereo o locale HK · peso × nolo/kg + prezzo×FX · modello BV",
+    uom_title: "📐 Unità di Misura (UOM)",
+    ubic_title: "🏭 Gestione magazzino (Ubicazione)",
+    ubic_mto_title: "🔄 MTO — Cross-docking",
+    ubic_mto_sub: "Costo In+Stock+Out per pallet · usa prezzo DAP",
+    ubic_for_title: "🚛 FOR — Franco fornitore",
+    ubic_for_sub: "Nessun costo handling aggiunto · usa prezzo FCA",
+    ubic_mts_title: "🏭 MTS — Magazzino Unifreddo",
+    ubic_mts_sub: "Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)",
+    price_pack_title: "📦 Prezzo & Contenenza",
+    lbl_fca: 'FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span>',
+    lbl_dap: 'DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span>',
+    lbl_mts: 'MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(magazzino)</span>',
+    lbl_kg_per_pallet: "⚖️ Kg per pallet",
+    hint_kg_per_pallet: "Peso totale del pallet in kg (es: 4kg/box × 180 box/pallet = 720kg)",
+    lbl_plt_container: 'Pallet per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span>',
+    lbl_fx: 'Tasso di cambio EUR → HKD <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 9.1437)</span>',
+    temp_title: "🌡️ Temperatura",
+    temp_dry: "🌾 Dry (Secco)",
+    temp_fresh: "❄️ Fresh (+15°C / +4°C)",
+    temp_frozen: "🧊 Frozen (−18°C)",
+    area_title: "📍 Area fornitore",
+    area_nord: "Nord", area_centro: "Centro", area_sud: "Sud",
+    options_title: "⚙️ Voci opzionali",
+    opt_cert: "✅ Health Certificate",
+    opt_alc: "🍷 Tassa alcolici",
+    lbl_alc_tax: "Tassa alcolici (€ / unità)",
+    entity_title: "🏢 Entità (imposta i preset nolo consigliati)",
+    air_price_weight_title: "📦 Prezzo acquisto & Peso",
+    air_price_label: "Prezzo acquisto per unità",
+    air_weight_label: "⚖️ Peso lordo per unità (kg / UoM)",
+    air_weight_hint: 'Peso lordo del singolo pezzo/cartone venduto — anagrafica BC: <em>Gross Weight KG/UoM</em>.',
+    air_markup_hint: "Applicata su Prezzo×FX. Disattivabile per confronto (riunione test).",
+    air_temp_title: "🌡️ Temperatura di trasporto",
+    air_temp_dry: "🌾 Dry (Secco)", air_temp_fresh: "❄️ Fresh (Fresco)", air_temp_frozen: "🧊 Frozen (Surgelato)",
+    air_temp_hint: "Vale sia per aereo che per locale HK (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.",
+    air_freight_title: "🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)",
+    air_preset_label: '⚡ Preset nolo consigliati <span style="font-size:9px;color:rgba(221,213,200,0.35);">valori tipici per l\'entità selezionata — modificabili, verifica col fornitore</span>',
+    preset_manual: "✏️ Manuale (inserisco io le tariffe)",
+    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span>',
+    air_leg_main: '② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span>',
+    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span>',
+    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori)</span>',
+    air_fx_title: '💱 Tassi di cambio → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(foglio 03_FX_Rates · modificabili)</span>',
+    air_fx_hint: "HKD = 1 (valuta base). Aggiorna i tassi se il modello FX cambia.",
+    btn_complete: "Completa i campi per calcolare",
+    btn_calc: "✦  CALCOLA STANDARD COST",
+    btn_calc_air: "✦  CALCOLA STANDARD COST (AIR)",
+    results_title: "✦ Risultati — Standard Cost 2",
+    card_euro_unit: "EURO · per unità",
+    card_hkd_unit: "HKD · per unità",
+    card_hkd_kg: "HKD · per kg",
+    cost_detail_unit: "DETTAGLIO COSTI · per unità",
+    cost_detail_unit_hkd: "DETTAGLIO COSTI · per unità (HKD)",
+    pvp_title: "💰 Prezzo di Vendita & Margine",
+    pvp_eur_label: 'Prezzo di Vendita (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span>',
+    pvp_hkd_label: 'Prezzo di Vendita (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unità</span>',
+    margin_pct: "Margine %",
+    pvp_hint: "💡 Inserisci il prezzo in EUR o HKD, l'altro campo si aggiorna automaticamente.",
+    disclaimer_sea: '⚠️ <strong>Nota:</strong> Stima indicativa (modello HK 2026). I valori reali possono variare in base ad accordi specifici.',
+    air_results_title: "✦ Risultati — Standard Cost Via Aerea / Local",
+    air_card_std: "Standard Cost (Air)",
+    air_card_freight: "Nolo aereo totale",
+    air_suggested_title: "🎯 Prezzo di vendita suggerito (per margine target)",
+    air_margin_title: "💰 Margine su Prezzo di Vendita (HKD)",
+    disclaimer_air: '⚠️ <strong>Nota:</strong> Calcolo via aerea basato sul modello BV — <em>Std Cost = Prezzo×FX×(1+markup) + Nolo/kg × Peso lordo</em>. Non include voci sea (FOB, LIC, VGM, pallet, magazzino). Verificare sempre con il file Excel prima del caricamento su NAV.',
+    // dinamici
+    hint_uom_pcs: "Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.",
+    hint_uom_box: "Prezzo per cartone/box. Divisore = box/pallet × plt/container.",
+    hint_uom_kg: "Inserisci il peso totale del pallet in Kg.",
+    unit_PCS: "PEZZO", unit_BOX: "CARTONE/BOX", unit_KG: "KG",
+    purchase_price_per: "Prezzo acquisto per", source: "Fonte",
+    price_empty: "— Inserisci un prezzo qui sotto —",
+    price_hint_default: "Inserisci il prezzo in uno dei campi sottostanti",
+    qty_label: "Pezzi per cartone",
+    box_label: "Cartoni per pallet",
+    box_label_box: "Cartoni (BOX) per pallet",
+    divisor_unit: "pz / pallet",
+    warn_dry_centro: "⚠️ DRY da Centro: FOB = 0 nel modello",
+    warn_fresh_sud: "⚠️ Fresh da Sud: FOB = 0 nel modello",
+    warn_frozen: "⚠️ Frozen disponibile solo da Nord",
+    markup_on: "✅ Maggiorazione +2% (×1.02) — modello",
+    markup_off: "⬜ Maggiorazione +2% (×1.02) — modello",
+    row_purchase: "Prezzo acquisto",
+    row_fob: "FOB + Nolo",
+    row_lic: "Local Import Charges",
+    row_vgm: "VGM Charges",
+    row_hc: "Health Certificate",
+    row_pallet: "Costo pallet",
+    row_alc: "Tassa alcolici",
+    row_step1: "→ Standard Cost Step 1",
+    row_step2: "→ Standard Cost Step 2",
+    wh_mto: "🔄 MTO — In+Stock+Out",
+    wh_mts: "🏭 MTS — Deposito+Inbound+Picking",
+    wh_for: "🚛 FOR — Nessun costo handling",
+    air_row_purchase: "Prezzo acquisto",
+    air_row_markup: "+2% concordato (×1.02)",
+    air_row_price_hkd: "→ Prezzo in HKD",
+    air_freight_hdr: "NOLO AEREO (tariffe per kg → HKD/kg)",
+    air_leg_origin_r: "① Origin Land",
+    air_leg_main_r: "② Main Freight (aereo)",
+    air_leg_dest_r: "③ Dest Land",
+    air_leg_acc_r: "④ Accessory",
+    air_total_freight: "Nolo totale",
+    air_times_weight: "× Peso lordo",
+    air_freight_unit: "→ Nolo per unità",
+    air_std_hkd: "→ Standard Cost (HKD)",
+    suggest_margin: "Margine",
+    margin_pos: "positivo", margin_neg: "negativo", margin_word: "Margine",
+    per_unit: "unità",
+    preset_bv_eu: "🇪🇺 EU Aereo — 4€ + dest 6 + acc 6 HKD (≈ 47,96/kg)",
+    preset_bv_au: "🇦🇺 Australia Aereo — 1,8 AUD + dest 6 + acc 6 (≈ 21,8/kg)",
+    preset_local: "🏠 Locale HK — nessun nolo (tutto 0)",
+    preset_hoff_eu: "🇪🇺 EU Aereo — 5€ + dest 10 + acc 0 (≈ 54,95/kg)",
+    preset_hoff_au: "🇦🇺 Australia Aereo — 0,15+1,6 AUD + dest 2,6 (≈ 12,1/kg)",
+  },
+  en: {
+    model_label: "Model 04/2026",
+    transport_mode: "🚚 Transport mode",
+    mode_sea_title: "🚢 By Sea (Container)",
+    mode_sea_sub: "Pallet/container model · unchanged logic",
+    mode_air_title: "✈️ By Air / Local",
+    mode_air_sub: "Air or HK local · weight × freight/kg + price×FX · BV model",
+    uom_title: "📐 Unit of Measure (UOM)",
+    ubic_title: "🏭 Warehouse management (Location)",
+    ubic_mto_title: "🔄 MTO — Cross-docking",
+    ubic_mto_sub: "In+Stock+Out cost per pallet · uses DAP price",
+    ubic_for_title: "🚛 FOR — Free Carrier",
+    ubic_for_sub: "No handling cost added · uses FCA price",
+    ubic_mts_title: "🏭 MTS — Unifreddo Warehouse",
+    ubic_mts_sub: "Storage + Inbound + Picking · uses MTS price (or DAP if 0)",
+    price_pack_title: "📦 Price & Packaging",
+    lbl_fca: 'FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span>',
+    lbl_dap: 'DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS if MTS=0)</span>',
+    lbl_mts: 'MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(warehouse)</span>',
+    lbl_kg_per_pallet: "⚖️ Kg per pallet",
+    hint_kg_per_pallet: "Total pallet weight in kg (e.g. 4kg/box × 180 box/pallet = 720kg)",
+    lbl_plt_container: 'Pallets per container <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 25)</span>',
+    lbl_fx: 'Exchange rate EUR → HKD <span style="font-size:9px;color:rgba(196,135,59,0.6);">(default: 9.1437)</span>',
+    temp_title: "🌡️ Temperature",
+    temp_dry: "🌾 Dry", temp_fresh: "❄️ Fresh (+15°C / +4°C)", temp_frozen: "🧊 Frozen (−18°C)",
+    area_title: "📍 Supplier area",
+    area_nord: "North", area_centro: "Center", area_sud: "South",
+    options_title: "⚙️ Optional items",
+    opt_cert: "✅ Health Certificate",
+    opt_alc: "🍷 Alcohol tax",
+    lbl_alc_tax: "Alcohol tax (€ / unit)",
+    entity_title: "🏢 Entity (sets recommended freight presets)",
+    air_price_weight_title: "📦 Purchase price & Weight",
+    air_price_label: "Purchase price per unit",
+    air_weight_label: "⚖️ Gross weight per unit (kg / UoM)",
+    air_weight_hint: 'Gross weight of the single piece/box sold — BC master data: <em>Gross Weight KG/UoM</em>.',
+    air_markup_hint: "Applied on Price×FX. Can be disabled for comparison (test meeting).",
+    air_temp_title: "🌡️ Transport temperature",
+    air_temp_dry: "🌾 Dry", air_temp_fresh: "❄️ Fresh", air_temp_frozen: "🧊 Frozen",
+    air_temp_hint: "Applies to both air and HK local (indicative). Enter freight rates per leg below.",
+    air_freight_title: "🚚 Air freight — 4 legs (rate per kg + currency)",
+    air_preset_label: '⚡ Recommended freight presets <span style="font-size:9px;color:rgba(221,213,200,0.35);">typical values for the selected entity — editable, verify with the supplier</span>',
+    preset_manual: "✏️ Manual (I enter the rates)",
+    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(origin pickup)</span>',
+    air_leg_main: '② Main Freight — air <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span>',
+    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span>',
+    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessories)</span>',
+    air_fx_title: '💱 Exchange rates → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(sheet 03_FX_Rates · editable)</span>',
+    air_fx_hint: "HKD = 1 (base currency). Update the rates if the FX model changes.",
+    btn_complete: "Complete the fields to calculate",
+    btn_calc: "✦  CALCULATE STANDARD COST",
+    btn_calc_air: "✦  CALCULATE STANDARD COST (AIR)",
+    results_title: "✦ Results — Standard Cost 2",
+    card_euro_unit: "EURO · per unit",
+    card_hkd_unit: "HKD · per unit",
+    card_hkd_kg: "HKD · per kg",
+    cost_detail_unit: "COST BREAKDOWN · per unit",
+    cost_detail_unit_hkd: "COST BREAKDOWN · per unit (HKD)",
+    pvp_title: "💰 Sale Price & Margin",
+    pvp_eur_label: 'Sale Price (€) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unit</span>',
+    pvp_hkd_label: 'Sale Price (HK$) <span style="font-size:9px;color:rgba(196,135,59,0.6);">per unit</span>',
+    margin_pct: "Margin %",
+    pvp_hint: "💡 Enter the price in EUR or HKD, the other field updates automatically.",
+    disclaimer_sea: '⚠️ <strong>Note:</strong> Indicative estimate (HK model 2026). Actual values may vary based on specific agreements.',
+    air_results_title: "✦ Results — Standard Cost By Air / Local",
+    air_card_std: "Standard Cost (Air)",
+    air_card_freight: "Total air freight",
+    air_suggested_title: "🎯 Suggested sale price (for target margin)",
+    air_margin_title: "💰 Margin on Sale Price (HKD)",
+    disclaimer_air: '⚠️ <strong>Note:</strong> Air calculation based on the BV model — <em>Std Cost = Price×FX×(1+markup) + Freight/kg × Gross weight</em>. Does not include sea items (FOB, LIC, VGM, pallet, warehouse). Always verify with the Excel file before uploading to NAV.',
+    // dynamic
+    hint_uom_pcs: "Price per single piece. Divisor = pcs/box × box/pallet × plt/container.",
+    hint_uom_box: "Price per box. Divisor = box/pallet × plt/container.",
+    hint_uom_kg: "Enter the total pallet weight in Kg.",
+    unit_PCS: "PIECE", unit_BOX: "BOX", unit_KG: "KG",
+    purchase_price_per: "Purchase price per", source: "Source",
+    price_empty: "— Enter a price below —",
+    price_hint_default: "Enter the price in one of the fields below",
+    qty_label: "Pieces per box",
+    box_label: "Boxes per pallet",
+    box_label_box: "Boxes (BOX) per pallet",
+    divisor_unit: "pcs / pallet",
+    warn_dry_centro: "⚠️ DRY from Center: FOB = 0 in the model",
+    warn_fresh_sud: "⚠️ Fresh from South: FOB = 0 in the model",
+    warn_frozen: "⚠️ Frozen available only from North",
+    markup_on: "✅ +2% markup (×1.02) — model",
+    markup_off: "⬜ +2% markup (×1.02) — model",
+    row_purchase: "Purchase price",
+    row_fob: "FOB + Freight",
+    row_lic: "Local Import Charges",
+    row_vgm: "VGM Charges",
+    row_hc: "Health Certificate",
+    row_pallet: "Pallet cost",
+    row_alc: "Alcohol tax",
+    row_step1: "→ Standard Cost Step 1",
+    row_step2: "→ Standard Cost Step 2",
+    wh_mto: "🔄 MTO — In+Stock+Out",
+    wh_mts: "🏭 MTS — Storage+Inbound+Picking",
+    wh_for: "🚛 FOR — No handling cost",
+    air_row_purchase: "Purchase price",
+    air_row_markup: "+2% agreed (×1.02)",
+    air_row_price_hkd: "→ Price in HKD",
+    air_freight_hdr: "AIR FREIGHT (rates per kg → HKD/kg)",
+    air_leg_origin_r: "① Origin Land",
+    air_leg_main_r: "② Main Freight (air)",
+    air_leg_dest_r: "③ Dest Land",
+    air_leg_acc_r: "④ Accessory",
+    air_total_freight: "Total freight",
+    air_times_weight: "× Gross weight",
+    air_freight_unit: "→ Freight per unit",
+    air_std_hkd: "→ Standard Cost (HKD)",
+    suggest_margin: "Margin",
+    margin_pos: "positive", margin_neg: "negative", margin_word: "Margin",
+    per_unit: "unit",
+    preset_bv_eu: "🇪🇺 EU Air — 4€ + dest 6 + acc 6 HKD (≈ 47.96/kg)",
+    preset_bv_au: "🇦🇺 Australia Air — 1.8 AUD + dest 6 + acc 6 (≈ 21.8/kg)",
+    preset_local: "🏠 HK Local — no freight (all 0)",
+    preset_hoff_eu: "🇪🇺 EU Air — 5€ + dest 10 + acc 0 (≈ 54.95/kg)",
+    preset_hoff_au: "🇦🇺 Australia Air — 0.15+1.6 AUD + dest 2.6 (≈ 12.1/kg)",
+  }
+};
+function t(k) { return (T[state.lang] && T[state.lang][k] != null) ? T[state.lang][k] : (T.it[k] || k); }
+
 // ─── STATO ──────────────────────────────────────────────────────
 const state = {
-    mode: 'SEA',          // 'SEA' | 'AIR'
+    lang: 'it',
+    mode: 'SEA',
     uom: 'PCS',
     ubicazione: 'MTO',
     temperature: 'DRY',
@@ -558,35 +794,32 @@ const state = {
     hasCert: false,
     hasAlcTax: false,
     lastResult: null,
-    // AIR
-    airEntity: 'BV',      // BV | HOFF (determina i preset nolo consigliati)
-    airType: 'DRY',       // DRY | FRESH | FROZEN (temperatura di trasporto, aereo o locale)
-    airMarkup: true,      // +2% (×1.02) come nel modello BV
+    airEntity: 'BV',
+    airType: 'DRY',
+    airMarkup: true,
     airResult: null,
 };
 
-// ─── COSTANTI AIR (modello BV: 06_Calc_ST + 03_FX_Rates) ────────
+// ─── COSTANTI AIR ──────────────────────────────────────────────
 const AIR = {
     FX_DEFAULT: { HKD: 1, EUR: 8.99, USD: 7.85, AUD: 5.43, GBP: 10.41, CNY: 1.16 },
-    MARKUP: 1.02,         // +2% concordato applicato su Prezzo×FX
+    MARKUP: 1.02,
     MARGINS: [0.20, 0.30, 0.40],
-    TYPE_LABEL: { DRY: '🌾 Dry (Secco)', FRESH: '❄️ Fresh (Fresco)', FROZEN: '🧊 Frozen (Surgelato)' },
-    // Preset nolo consigliati per entità (valori tipici estratti dai fogli 04_Freight — da verificare col fornitore)
     PRESETS: {
         BV: {
-            EU:    { label: '🇪🇺 EU Aereo — 4€ + dest 6 + acc 6 HKD (≈ 47,96/kg)',  o: [0, 'EUR'],    m: [4, 'EUR'],   d: [6, 'HKD'], a: [6, 'HKD'] },
-            AU:    { label: '🇦🇺 Australia Aereo — 1,8 AUD + dest 6 + acc 6 (≈ 21,8/kg)', o: [0, 'AUD'], m: [1.8, 'AUD'], d: [6, 'HKD'], a: [6, 'HKD'] },
-            LOCAL: { label: '🏠 Locale HK — nessun nolo (tutto 0)',                  o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
+            EU:    { labelKey: 'preset_bv_eu', o: [0, 'EUR'],    m: [4, 'EUR'],   d: [6, 'HKD'], a: [6, 'HKD'] },
+            AU:    { labelKey: 'preset_bv_au', o: [0, 'AUD'],    m: [1.8, 'AUD'], d: [6, 'HKD'], a: [6, 'HKD'] },
+            LOCAL: { labelKey: 'preset_local', o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
         },
         HOFF: {
-            EU:    { label: '🇪🇺 EU Aereo — 5€ + dest 10 + acc 0 (≈ 54,95/kg)',      o: [0, 'EUR'],    m: [5, 'EUR'],   d: [10, 'HKD'], a: [0, 'HKD'] },
-            AU:    { label: '🇦🇺 Australia Aereo — 0,15+1,6 AUD + dest 2,6 (≈ 12,1/kg)', o: [0.15, 'AUD'], m: [1.6, 'AUD'], d: [2.6, 'HKD'], a: [0, 'HKD'] },
-            LOCAL: { label: '🏠 Locale HK — nessun nolo (tutto 0)',                  o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
+            EU:    { labelKey: 'preset_hoff_eu', o: [0, 'EUR'],  m: [5, 'EUR'],   d: [10, 'HKD'], a: [0, 'HKD'] },
+            AU:    { labelKey: 'preset_hoff_au', o: [0.15, 'AUD'], m: [1.6, 'AUD'], d: [2.6, 'HKD'], a: [0, 'HKD'] },
+            LOCAL: { labelKey: 'preset_local', o: [0, 'HKD'],    m: [0, 'HKD'],   d: [0, 'HKD'], a: [0, 'HKD'] },
         },
     },
 };
 
-// ─── COSTANTI ──────────────────────────────────────────────────
+// ─── COSTANTI SEA ──────────────────────────────────────────────
 const C = {
     EUR_TO_HKD: 9.1437,
     FOB: {
@@ -607,87 +840,77 @@ const C = {
     DEFAULT_PLT: { DRY: 25, FRESH: 23, FROZEN: 23 },
 };
 
-// ─── FUNZIONI PREZZO ──────────────────────────────────────────────
+function $(id) { return document.getElementById(id); }
 
+// ─── LINGUA ─────────────────────────────────────────────────────
+function toggleLang() { setLang(state.lang === 'it' ? 'en' : 'it'); }
+
+function setLang(lang) {
+    state.lang = lang;
+    document.documentElement.lang = lang;
+    // il bottone mostra la lingua verso cui si può passare
+    $('langFlag').textContent = lang === 'it' ? '🇬🇧' : '🇮🇹';
+    $('langLabel').textContent = lang === 'it' ? 'English' : 'Italiano';
+    applyLang();
+}
+
+function applyLang() {
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+        const k = el.dataset.i18n; if (T[state.lang][k] != null) el.textContent = T[state.lang][k];
+    });
+    document.querySelectorAll('[data-i18n-html]').forEach(el => {
+        const k = el.dataset.i18nHtml; if (T[state.lang][k] != null) el.innerHTML = T[state.lang][k];
+    });
+    // elementi dinamici
+    updateUOMFields();
+    updateFobWarn();
+    updateMarkupBtn();
+    rebuildPresetOptions();
+    checkCanCalc();
+    // se ci sono risultati a schermo, ri-renderizza nella nuova lingua
+    if (state.mode === 'SEA' && state.lastResult) renderResults(state.lastResult);
+    if (state.mode === 'AIR' && state.airResult) renderAir(state.airResult);
+}
+
+// ─── PREZZO ─────────────────────────────────────────────────────
 function getActivePrice() {
     const ubic = state.ubicazione;
-    const fca = parseFloat(document.getElementById('price-fca-input').value) || 0;
-    const dap = parseFloat(document.getElementById('price-dap-input').value) || 0;
-    const mts = parseFloat(document.getElementById('price-mts-input').value) || 0;
-    
-    let price = 0;
-    let source = '';
-    
-    if (ubic === 'FOR') {
-        price = fca;
-        source = 'FCA';
-    } else if (ubic === 'MTO') {
-        price = dap;
-        source = 'DAP';
-    } else if (ubic === 'MTS') {
-        if (mts > 0) {
-            price = mts;
-            source = 'MTS';
-        } else {
-            price = dap;
-            source = 'DAP (MTS=0)';
-        }
+    const fca = parseFloat($('price-fca-input').value) || 0;
+    const dap = parseFloat($('price-dap-input').value) || 0;
+    const mts = parseFloat($('price-mts-input').value) || 0;
+    let price = 0, source = '';
+    if (ubic === 'FOR') { price = fca; source = 'FCA'; }
+    else if (ubic === 'MTO') { price = dap; source = 'DAP'; }
+    else if (ubic === 'MTS') {
+        if (mts > 0) { price = mts; source = 'MTS'; }
+        else { price = dap; source = state.lang === 'it' ? 'DAP (MTS=0)' : 'DAP (MTS=0)'; }
     }
-    
     return { price, source };
 }
 
 function syncPrice() {
-    const display = document.getElementById('priceDisplay');
-    const hint = document.getElementById('priceHint');
+    const display = $('priceDisplay'), hint = $('priceHint'), priceLabel = $('priceLabel');
     const result = getActivePrice();
-    const priceLabel = document.getElementById('priceLabel');
-    
-    // Aggiorna il display del prezzo (SOLA VISUALIZZAZIONE)
+    const uom = state.uom;
+    const unitLabel = t('unit_' + uom);
     if (result.price > 0) {
         display.innerHTML = `€ ${result.price.toFixed(4)}`;
-        display.style.fontSize = '18px';
-        display.style.fontWeight = 'bold';
-        display.style.color = '#E8C97A';
-        hint.textContent = `✅ Fonte: ${result.source}`;
-        hint.style.color = 'rgba(196,135,59,0.7)';
-        
-        // Aggiorna anche l'etichetta con la fonte
-        const uom = state.uom;
-        let unitLabel = 'PEZZO';
-        if (uom === 'BOX') unitLabel = 'CARTONE/BOX';
-        else if (uom === 'KG') unitLabel = 'KG';
-        priceLabel.textContent = `Prezzo acquisto per ${unitLabel} (€) — Fonte: ${result.source}`;
+        display.style.fontSize = '18px'; display.style.fontWeight = 'bold'; display.style.color = '#E8C97A';
+        hint.textContent = `✅ ${t('source')}: ${result.source}`; hint.style.color = 'rgba(196,135,59,0.7)';
+        priceLabel.textContent = `${t('purchase_price_per')} ${unitLabel} (€) — ${t('source')}: ${result.source}`;
     } else {
-        display.innerHTML = `<span class="price-display-empty">— Inserisci un prezzo qui sotto —</span>`;
-        display.style.fontSize = '14px';
-        display.style.fontWeight = 'normal';
-        display.style.color = 'rgba(221,213,200,0.3)';
-        hint.textContent = 'Inserisci il prezzo in uno dei campi sottostanti';
-        hint.style.color = 'rgba(221,213,200,0.35)';
-        
-        const uom = state.uom;
-        let unitLabel = 'PEZZO';
-        if (uom === 'BOX') unitLabel = 'CARTONE/BOX';
-        else if (uom === 'KG') unitLabel = 'KG';
-        priceLabel.textContent = `Prezzo acquisto per ${unitLabel} (€)`;
+        display.innerHTML = `<span class="price-display-empty">${t('price_empty')}</span>`;
+        display.style.fontSize = '14px'; display.style.fontWeight = 'normal'; display.style.color = 'rgba(221,213,200,0.3)';
+        hint.textContent = t('price_hint_default'); hint.style.color = 'rgba(221,213,200,0.35)';
+        priceLabel.textContent = `${t('purchase_price_per')} ${unitLabel} (€)`;
     }
-    
-    // Evidenzia il campo prezzo attivo
     document.querySelectorAll('.price-field').forEach(el => el.classList.remove('active-price'));
-    const ubic = state.ubicazione;
     const priceMap = { 'FOR': 'price-fca', 'MTO': 'price-dap', 'MTS': 'price-mts' };
-    const activeEl = document.getElementById(priceMap[ubic]);
-    if (activeEl) activeEl.classList.add('active-price');
-    
-    clearResults();
-    checkCanCalc();
+    const activeEl = $(priceMap[state.ubicazione]); if (activeEl) activeEl.classList.add('active-price');
+    clearResults(); checkCanCalc();
 }
 
-// ─── FUNZIONI UI ───────────────────────────────────────────────
-function $(id) { return document.getElementById(id); }
-
-// ─── MODALITÀ SEA / AIR ────────────────────────────────────────
+// ─── MODALITÀ / UI ──────────────────────────────────────────────
 function setMode(mode) {
     state.mode = mode;
     const seaBtn = $('mode-sea'), airBtn = $('mode-air');
@@ -700,40 +923,35 @@ function setMode(mode) {
     }
     $('seaInputs').classList.toggle('hidden', mode !== 'SEA');
     $('airInputs').classList.toggle('hidden', mode !== 'AIR');
-    clearResults();
-    checkCanCalc();
+    clearResults(); checkCanCalc();
 }
 
-function setAirType(t) {
-    state.airType = t;
+function setAirType(tt) {
+    state.airType = tt;
     const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
     document.querySelectorAll('[data-airtype]').forEach(el => {
-        const on = el.dataset.airtype === t;
+        const on = el.dataset.airtype === tt;
         el.classList.toggle('active', on);
-        el.style.borderColor = on ? colors[t] : 'rgba(255,255,255,0.09)';
-        el.style.background = on ? colors[t] + '22' : 'rgba(255,255,255,0.04)';
+        el.style.borderColor = on ? colors[tt] : 'rgba(255,255,255,0.09)';
+        el.style.background = on ? colors[tt] + '22' : 'rgba(255,255,255,0.04)';
         el.style.color = on ? '#EEE' : 'rgba(221,213,200,0.6)';
     });
     clearResults();
 }
 
-function toggleAirMarkup() {
-    state.airMarkup = !state.airMarkup;
+function updateMarkupBtn() {
     const btn = $('air-markup-btn');
     btn.classList.toggle('active', state.airMarkup);
-    btn.textContent = (state.airMarkup ? '✅' : '⬜') + ' Maggiorazione +2% (×1.02) — modello';
+    btn.textContent = state.airMarkup ? t('markup_on') : t('markup_off');
     btn.style.borderColor = state.airMarkup ? '#4A9B6C' : 'rgba(255,255,255,0.09)';
     btn.style.background = state.airMarkup ? 'rgba(74,155,108,0.15)' : 'rgba(255,255,255,0.04)';
     btn.style.color = state.airMarkup ? '#EEE' : 'rgba(221,213,200,0.6)';
-    clearResults();
 }
 
-function onAirChange() {
-    clearResults();
-    checkCanCalc();
-}
+function toggleAirMarkup() { state.airMarkup = !state.airMarkup; updateMarkupBtn(); clearResults(); }
 
-// Entità HOFF / BV: cambia i preset nolo consigliati
+function onAirChange() { clearResults(); checkCanCalc(); }
+
 function setAirEntity(e) {
     state.airEntity = e;
     const bv = $('ent-bv'), hf = $('ent-hoff');
@@ -741,26 +959,23 @@ function setAirEntity(e) {
     const off = (btn) => { btn.classList.remove('active'); btn.style.borderColor = 'rgba(255,255,255,0.09)'; btn.style.background = 'rgba(255,255,255,0.04)'; btn.style.color = 'rgba(221,213,200,0.6)'; };
     if (e === 'BV') { on(bv, '#4A8C9B'); off(hf); } else { on(hf, '#C4873B'); off(bv); }
     rebuildPresetOptions();
-    clearResults();
-    checkCanCalc();
+    clearResults(); checkCanCalc();
 }
 
-// Ricostruisce il menu preset in base all'entità selezionata
 function rebuildPresetOptions() {
     const sel = $('air-preset');
     const P = AIR.PRESETS[state.airEntity] || {};
-    sel.innerHTML = '<option value="MANUAL">✏️ Manuale (inserisco io le tariffe)</option>';
+    sel.innerHTML = `<option value="MANUAL">${t('preset_manual')}</option>`;
     ['EU', 'AU', 'LOCAL'].forEach(k => {
         if (P[k]) {
             const o = document.createElement('option');
-            o.value = k; o.textContent = P[k].label;
+            o.value = k; o.textContent = t(P[k].labelKey);
             sel.appendChild(o);
         }
     });
     sel.value = 'MANUAL';
 }
 
-// Preset nolo: precompila le 4 tratte con i valori tipici dell'entità (modificabili)
 function applyFreightPreset() {
     const p = $('air-preset').value;
     if (p !== 'MANUAL') {
@@ -772,9 +987,7 @@ function applyFreightPreset() {
             $('air-acc').value    = c.a[0]; $('air-acc-cur').value    = c.a[1];
         }
     }
-    // MANUAL non tocca i campi
-    clearResults();
-    checkCanCalc();
+    clearResults(); checkCanCalc();
 }
 
 function airFx(cur) {
@@ -792,38 +1005,19 @@ function setUOM(uom) {
 
 function updateUOMFields() {
     const uom = state.uom;
-    const qtyField = $('qtyField');
-    const qtyLabel = $('qtyLabel');
-    const boxField = $('boxField');
-    const boxLabel = $('boxLabel');
-    const kgField = $('kgPerPalletField');
-    const priceLabel = $('priceLabel');
-    const hint = $('uomHint');
-    const divisorHint = $('divisorHint');
-
+    const qtyField = $('qtyField'), boxField = $('boxField'), kgField = $('kgPerPalletField');
+    const qtyLabel = $('qtyLabel'), boxLabel = $('boxLabel'), hint = $('uomHint'), divisorHint = $('divisorHint');
     if (uom === 'BOX') {
-        qtyField.style.display = 'none';
-        boxField.style.display = 'block';
-        kgField.style.display = 'none';
-        priceLabel.textContent = 'Prezzo acquisto per CARTONE/BOX (€)';
-        boxLabel.textContent = 'Cartoni (BOX) per pallet';
-        hint.textContent = 'Prezzo per cartone/box. Divisore = box/pallet × plt/container.';
-        divisorHint.textContent = '';
+        qtyField.style.display = 'none'; boxField.style.display = 'block'; kgField.style.display = 'none';
+        boxLabel.textContent = t('box_label_box');
+        hint.textContent = t('hint_uom_box'); divisorHint.textContent = '';
     } else if (uom === 'KG') {
-        qtyField.style.display = 'none';
-        boxField.style.display = 'none';
-        kgField.style.display = 'block';
-        priceLabel.textContent = 'Prezzo acquisto per KG (€)';
-        hint.textContent = 'Inserisci il peso totale del pallet in Kg.';
-        divisorHint.textContent = '';
+        qtyField.style.display = 'none'; boxField.style.display = 'none'; kgField.style.display = 'block';
+        hint.textContent = t('hint_uom_kg'); divisorHint.textContent = '';
     } else {
-        qtyField.style.display = 'block';
-        qtyLabel.textContent = 'Pezzi per cartone';
-        boxField.style.display = 'block';
-        boxLabel.textContent = 'Cartoni per pallet';
-        kgField.style.display = 'none';
-        priceLabel.textContent = 'Prezzo acquisto per PEZZO (€)';
-        hint.textContent = 'Prezzo per singolo pezzo. Divisore = pz/box × box/pallet × plt/container.';
+        qtyField.style.display = 'block'; boxField.style.display = 'block'; kgField.style.display = 'none';
+        qtyLabel.textContent = t('qty_label'); boxLabel.textContent = t('box_label');
+        hint.textContent = t('hint_uom_pcs');
         updateDivisorHint();
     }
     syncPrice();
@@ -832,30 +1026,19 @@ function updateUOMFields() {
 function updateDivisorHint() {
     const uom = state.uom;
     if (uom === 'BOX' || uom === 'KG') return;
-    const qty = parseFloat($('qtyPerBox').value) || 0;
-    const box = parseFloat($('boxPerPallet').value) || 0;
-    const hint = $('divisorHint');
-    hint.textContent = (qty && box) ? `→ ${qty * box} pz / pallet` : '';
+    const qty = parseFloat($('qtyPerBox').value) || 0, box = parseFloat($('boxPerPallet').value) || 0;
+    $('divisorHint').textContent = (qty && box) ? `→ ${qty * box} ${t('divisor_unit')}` : '';
 }
 
 function setUbic(ubic) {
     state.ubicazione = ubic;
     document.querySelectorAll('[data-ubic]').forEach(el => {
-        const isActive = el.dataset.ubic === ubic;
-        el.classList.toggle('active', isActive);
+        const isActive = el.dataset.ubic === ubic; el.classList.toggle('active', isActive);
         const colors = { MTO: '#4A8C9B', FOR: '#6A9B4A', MTS: '#C4873B' };
-        if (isActive) {
-            el.style.borderColor = colors[ubic];
-            el.style.background = colors[ubic] + '22';
-            el.style.color = '#EEE';
-        } else {
-            el.style.borderColor = 'rgba(255,255,255,0.09)';
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.color = 'rgba(221,213,200,0.6)';
-        }
+        if (isActive) { el.style.borderColor = colors[ubic]; el.style.background = colors[ubic] + '22'; el.style.color = '#EEE'; }
+        else { el.style.borderColor = 'rgba(255,255,255,0.09)'; el.style.background = 'rgba(255,255,255,0.04)'; el.style.color = 'rgba(221,213,200,0.6)'; }
     });
-    syncPrice();
-    clearResults();
+    syncPrice(); clearResults();
 }
 
 function setTemp(temp) {
@@ -863,43 +1046,30 @@ function setTemp(temp) {
     document.querySelectorAll('[data-temp]').forEach(el => {
         el.classList.toggle('active', el.dataset.temp === temp);
         const colors = { DRY: '#C4873B', FRESH: '#3B8DC4', FROZEN: '#7B3BC4' };
-        if (el.dataset.temp === temp) {
-            el.style.borderColor = colors[temp];
-            el.style.background = colors[temp] + '22';
-            el.style.color = '#EEE';
-        } else {
-            el.style.borderColor = 'rgba(255,255,255,0.09)';
-            el.style.background = 'rgba(255,255,255,0.04)';
-            el.style.color = 'rgba(221,213,200,0.6)';
-        }
+        if (el.dataset.temp === temp) { el.style.borderColor = colors[temp]; el.style.background = colors[temp] + '22'; el.style.color = '#EEE'; }
+        else { el.style.borderColor = 'rgba(255,255,255,0.09)'; el.style.background = 'rgba(255,255,255,0.04)'; el.style.color = 'rgba(221,213,200,0.6)'; }
     });
-    updateFobWarn();
-    clearResults();
+    updateFobWarn(); clearResults();
 }
 
 function setArea(area) {
     state.area = area;
     document.querySelectorAll('.btn-area').forEach(el => el.classList.toggle('active', el.dataset.area === area));
-    updateFobWarn();
-    clearResults();
+    updateFobWarn(); clearResults();
 }
 
 function updateFobWarn() {
-    const temp = state.temperature;
-    const area = state.area;
     const warn = $('fobWarn');
     let msg = '';
-    if (temp === 'DRY' && area === 'CENTRO') msg = '⚠️ DRY da Centro: FOB = 0 nel modello';
-    else if (temp === 'FRESH' && area === 'SUD') msg = '⚠️ Fresh da Sud: FOB = 0 nel modello';
-    else if (temp === 'FROZEN' && area !== 'NORD') msg = '⚠️ Frozen disponibile solo da Nord';
-    warn.textContent = msg;
-    warn.style.display = msg ? 'block' : 'none';
+    if (state.temperature === 'DRY' && state.area === 'CENTRO') msg = t('warn_dry_centro');
+    else if (state.temperature === 'FRESH' && state.area === 'SUD') msg = t('warn_fresh_sud');
+    else if (state.temperature === 'FROZEN' && state.area !== 'NORD') msg = t('warn_frozen');
+    warn.textContent = msg; warn.style.display = msg ? 'block' : 'none';
 }
 
 function toggleCert() {
     state.hasCert = !state.hasCert;
-    const btn = $('certBtn');
-    btn.classList.toggle('active', state.hasCert);
+    const btn = $('certBtn'); btn.classList.toggle('active', state.hasCert);
     btn.style.borderColor = state.hasCert ? '#4A9B6C' : 'rgba(255,255,255,0.09)';
     btn.style.background = state.hasCert ? 'rgba(74,155,108,0.15)' : 'rgba(255,255,255,0.04)';
     clearResults();
@@ -907,8 +1077,7 @@ function toggleCert() {
 
 function toggleAlc() {
     state.hasAlcTax = !state.hasAlcTax;
-    const btn = $('alcBtn');
-    btn.classList.toggle('active', state.hasAlcTax);
+    const btn = $('alcBtn'); btn.classList.toggle('active', state.hasAlcTax);
     btn.style.borderColor = state.hasAlcTax ? '#9B4A6C' : 'rgba(255,255,255,0.09)';
     btn.style.background = state.hasAlcTax ? 'rgba(155,74,108,0.15)' : 'rgba(255,255,255,0.04)';
     $('alcTaxField').classList.toggle('hidden', !state.hasAlcTax);
@@ -922,74 +1091,53 @@ function updateRate() {
 
 function onInputChange() {
     if (state.uom === 'PCS') updateDivisorHint();
-    clearResults();
-    checkCanCalc();
+    clearResults(); checkCanCalc();
 }
 
 function clearResults() {
     $('results').style.display = 'none';
     const ar = $('airResults'); if (ar) ar.style.display = 'none';
-    state.lastResult = null;
-    state.airResult = null;
+    state.lastResult = null; state.airResult = null;
     checkCanCalc();
 }
 
 function checkCanCalc() {
-    // ── AIR ──
     if (state.mode === 'AIR') {
         const p = parseFloat($('air-price').value) || 0;
         const w = parseFloat($('air-weight').value) || 0;
         const okA = p > 0 && w > 0;
         const btnA = $('calcBtn');
         btnA.disabled = !okA;
-        btnA.textContent = okA ? '✦  CALCOLA STANDARD COST (AIR)' : 'Completa i campi per calcolare';
+        btnA.textContent = okA ? t('btn_calc_air') : t('btn_complete');
         return;
     }
-    const result = getActivePrice();
-    const price = result.price;
+    const price = getActivePrice().price;
     const uom = state.uom;
     let ok = false;
-    
-    if (uom === 'BOX') {
-        const box = parseFloat($('boxPerPallet').value);
-        ok = price > 0 && box > 0;
-    } else if (uom === 'KG') {
-        const kg = parseFloat($('kgPerPallet').value);
-        ok = price > 0 && kg > 0;
-    } else {
-        const qty = parseFloat($('qtyPerBox').value) || 0;
-        const box = parseFloat($('boxPerPallet').value) || 0;
+    if (uom === 'BOX') { ok = price > 0 && (parseFloat($('boxPerPallet').value) > 0); }
+    else if (uom === 'KG') { ok = price > 0 && (parseFloat($('kgPerPallet').value) > 0); }
+    else {
+        const qty = parseFloat($('qtyPerBox').value) || 0, box = parseFloat($('boxPerPallet').value) || 0;
         ok = price > 0 && qty > 0 && box > 0;
     }
-    
     const btn = $('calcBtn');
     btn.disabled = !ok;
-    btn.textContent = ok ? '✦  CALCOLA STANDARD COST' : 'Completa i campi per calcolare';
+    btn.textContent = ok ? t('btn_calc') : t('btn_complete');
 }
 
-// ─── CALCOLO ────────────────────────────────────────────────────
+// ─── CALCOLO SEA ────────────────────────────────────────────────
 function calculate() {
     if (state.mode === 'AIR') { calculateAir(); return; }
     const result = getActivePrice();
-    const price = result.price;
-    const priceSource = result.source;
-    
+    const price = result.price, priceSource = result.source;
     const uom = state.uom;
     let unitsPerPlt = 0;
-    
-    if (uom === 'BOX') {
-        unitsPerPlt = parseFloat($('boxPerPallet').value) || 0;
-    } else if (uom === 'KG') {
-        unitsPerPlt = parseFloat($('kgPerPallet').value) || 0;
-    } else {
-        const qty = parseFloat($('qtyPerBox').value) || 0;
-        const box = parseFloat($('boxPerPallet').value) || 0;
-        unitsPerPlt = qty * box;
-    }
-    
+    if (uom === 'BOX') unitsPerPlt = parseFloat($('boxPerPallet').value) || 0;
+    else if (uom === 'KG') unitsPerPlt = parseFloat($('kgPerPallet').value) || 0;
+    else { unitsPerPlt = (parseFloat($('qtyPerBox').value) || 0) * (parseFloat($('boxPerPallet').value) || 0); }
+
     const plt = parseFloat($('pltPerContainer').value) || C.DEFAULT_PLT[state.temperature] || 25;
     const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
-    
     const totalUnits = unitsPerPlt * plt;
     if (!totalUnits || !price) return;
 
@@ -1004,256 +1152,181 @@ function calculate() {
     const step1Eur = price + fobPerUnit + licPerUnit + vgmPerUnit + hcPerUnit + palletPerUnit + alcPerUnit;
     const step1Hkd = step1Eur * rate;
 
-    let warehousePerUnit = 0;
-    let warehouseLabel = '';
-    
+    let warehousePerUnit = 0, whType = 'FOR';
     if (state.ubicazione === 'MTO') {
-        warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt;
-        warehouseLabel = '🔄 MTO — In+Stock+Out';
+        warehousePerUnit = (C.MTO_PER_PLT[state.temperature] || 8.16) / unitsPerPlt; whType = 'MTO';
     } else if (state.ubicazione === 'MTS') {
         const dep = (C.MTS.DEPOSITO[state.temperature] || 14.4228) / unitsPerPlt;
         const inbound = (C.MTS.INBOUND[state.temperature] || 2.5755) / unitsPerPlt;
         const pickDiv = (uom === 'BOX') ? 1 : (uom === 'KG' ? 1 : parseFloat($('qtyPerBox').value) || 1);
         const picking = (C.MTS.PICKING[state.temperature] || 0.303) / pickDiv;
-        warehousePerUnit = dep + inbound + picking;
-        warehouseLabel = '🏭 MTS — Deposito+Inbound+Picking';
-    } else {
-        warehouseLabel = '🚛 FOR — Nessun costo handling';
+        warehousePerUnit = dep + inbound + picking; whType = 'MTS';
     }
 
     const step2Eur = step1Eur + warehousePerUnit;
     const step2Hkd = step2Eur * rate;
 
-    const resultObj = {
-        purchaseEur: price,
-        purchaseHkd: price * rate,
-        priceSource: priceSource,
+    state.lastResult = {
+        purchaseEur: price, purchaseHkd: price * rate, priceSource,
         fobPerUnit, licPerUnit, vgmPerUnit, hcPerUnit, palletPerUnit, alcPerUnit,
-        warehousePerUnit, warehouseLabel,
-        step1Eur, step1Hkd, step2Eur, step2Hkd,
-        uomLabel: uom,
-        rate,
+        warehousePerUnit, whType, step1Eur, step1Hkd, step2Eur, step2Hkd, rate,
     };
-
-    state.lastResult = resultObj;
-    renderResults(resultObj);
+    renderResults(state.lastResult);
 }
 
-// ─── RENDER ─────────────────────────────────────────────────────
 function renderResults(r) {
     $('resultEur').textContent = '€ ' + r.step2Eur.toFixed(2);
     $('resultHkd').textContent = 'HK$ ' + r.step2Hkd.toFixed(2);
+    const whLabel = r.whType === 'MTO' ? t('wh_mto') : (r.whType === 'MTS' ? t('wh_mts') : t('wh_for'));
 
     let rows = `
-        <div class="cost-row bold">Prezzo acquisto (${r.priceSource}) <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
+        <div class="cost-row bold">${t('row_purchase')} (${r.priceSource}) <span>€ ${r.purchaseEur.toFixed(4)} (HK$ ${r.purchaseHkd.toFixed(2)})</span></div>
         <div class="divider"></div>
-        <div class="cost-row">FOB + Nolo <span>€ ${r.fobPerUnit.toFixed(4)}</span></div>
-        <div class="cost-row">Local Import Charges <span>€ ${r.licPerUnit.toFixed(4)}</span></div>
-        <div class="cost-row">VGM Charges <span>€ ${r.vgmPerUnit.toFixed(4)}</span></div>
-        ${r.hcPerUnit > 0 ? `<div class="cost-row">Health Certificate <span>€ ${r.hcPerUnit.toFixed(4)}</span></div>` : ''}
-        <div class="cost-row">Costo pallet <span>€ ${r.palletPerUnit.toFixed(4)}</span></div>
-        ${r.alcPerUnit > 0 ? `<div class="cost-row">Tassa alcolici <span>€ ${r.alcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="cost-row">${t('row_fob')} <span>€ ${r.fobPerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">${t('row_lic')} <span>€ ${r.licPerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">${t('row_vgm')} <span>€ ${r.vgmPerUnit.toFixed(4)}</span></div>
+        ${r.hcPerUnit > 0 ? `<div class="cost-row">${t('row_hc')} <span>€ ${r.hcPerUnit.toFixed(4)}</span></div>` : ''}
+        <div class="cost-row">${t('row_pallet')} <span>€ ${r.palletPerUnit.toFixed(4)}</span></div>
+        ${r.alcPerUnit > 0 ? `<div class="cost-row">${t('row_alc')} <span>€ ${r.alcPerUnit.toFixed(4)}</span></div>` : ''}
         <div class="divider"></div>
-        <div class="cost-row bold">→ Standard Cost Step 1 <span>€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
+        <div class="cost-row bold">${t('row_step1')} <span>€ ${r.step1Eur.toFixed(2)} (HK$ ${r.step1Hkd.toFixed(2)})</span></div>
         <div class="divider"></div>
-        <div class="cost-row">${r.warehouseLabel} <span>€ ${r.warehousePerUnit.toFixed(4)}</span></div>
+        <div class="cost-row">${whLabel} <span>€ ${r.warehousePerUnit.toFixed(4)}</span></div>
         <div class="divider"></div>
-        <div class="cost-row bold highlight" style="color:#C4873B;">→ Standard Cost Step 2 <span>€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
+        <div class="cost-row bold highlight" style="color:#C4873B;">${t('row_step2')} <span>€ ${r.step2Eur.toFixed(2)} (HK$ ${r.step2Hkd.toFixed(2)})</span></div>
     `;
     $('detailRows').innerHTML = rows;
-
     $('results').style.display = 'block';
-    
-    // Reset PVP
-    $('pvpEur').value = '';
-    $('pvpHgk').value = '';
-    $('marginEurPct').textContent = '—';
-    $('marginEurPct').className = 'pct';
-    $('marginHgkPct').textContent = '—';
-    $('marginHgkPct').className = 'pct';
-    $('marginEurDetail').textContent = '';
-    $('marginHgkDetail').textContent = '';
+    $('pvpEur').value = ''; $('pvpHgk').value = '';
+    ['marginEurPct', 'marginHgkPct'].forEach(id => { $(id).textContent = '—'; $(id).className = 'pct'; });
+    $('marginEurDetail').textContent = ''; $('marginHgkDetail').textContent = '';
 }
 
-// ─── CALCOLO AIR (modello BV) ──────────────────────────────────
+// ─── CALCOLO AIR ────────────────────────────────────────────────
 function calculateAir() {
     const price = parseFloat($('air-price').value) || 0;
     const priceCur = $('air-price-cur').value;
     const weight = parseFloat($('air-weight').value) || 0;
     if (!price || !weight) return;
-
     const markup = state.airMarkup ? AIR.MARKUP : 1;
     const priceFx = airFx(priceCur);
-    const priceHkdBase = price * priceFx;          // prezzo convertito, senza markup
-    const priceHkd = priceHkdBase * markup;        // con +2%
+    const priceHkdBase = price * priceFx;
+    const priceHkd = priceHkdBase * markup;
     const markupHkd = priceHkd - priceHkdBase;
-
     const legs = [
-        { label: '① Origin Land',        rate: parseFloat($('air-origin').value) || 0, cur: $('air-origin-cur').value },
-        { label: '② Main Freight (aereo)', rate: parseFloat($('air-main').value)  || 0, cur: $('air-main-cur').value },
-        { label: '③ Dest Land',          rate: parseFloat($('air-dest').value)   || 0, cur: $('air-dest-cur').value },
-        { label: '④ Accessory',          rate: parseFloat($('air-acc').value)    || 0, cur: $('air-acc-cur').value },
+        { key: 'air_leg_origin_r', rate: parseFloat($('air-origin').value) || 0, cur: $('air-origin-cur').value },
+        { key: 'air_leg_main_r',   rate: parseFloat($('air-main').value)  || 0, cur: $('air-main-cur').value },
+        { key: 'air_leg_dest_r',   rate: parseFloat($('air-dest').value)   || 0, cur: $('air-dest-cur').value },
+        { key: 'air_leg_acc_r',    rate: parseFloat($('air-acc').value)    || 0, cur: $('air-acc-cur').value },
     ];
     legs.forEach(l => { l.hkdPerKg = l.rate * airFx(l.cur); });
     const totalFreightPerKg = legs.reduce((a, l) => a + l.hkdPerKg, 0);
     const freightPerUom = totalFreightPerKg * weight;
     const newStdHkd = priceHkd + freightPerUom;
-
-    state.airResult = {
-        price, priceCur, priceFx, weight, markup, markupHkd,
-        priceHkdBase, priceHkd, legs, totalFreightPerKg, freightPerUom, newStdHkd,
-    };
+    state.airResult = { price, priceCur, priceFx, weight, markup, markupHkd, priceHkdBase, priceHkd, legs, totalFreightPerKg, freightPerUom, newStdHkd };
     renderAir(state.airResult);
 }
 
 function renderAir(r) {
     $('airResultHkd').textContent = 'HK$ ' + r.newStdHkd.toFixed(2);
     $('airFreightKg').textContent = 'HK$ ' + r.totalFreightPerKg.toFixed(2);
-
     const legRows = r.legs.map(l =>
-        `<div class="cost-row">${l.label} <span>${l.rate.toFixed(4)} ${l.cur} × ${airFx(l.cur).toFixed(2)} = HK$ ${l.hkdPerKg.toFixed(4)}/kg</span></div>`
+        `<div class="cost-row">${t(l.key)} <span>${l.rate.toFixed(4)} ${l.cur} × ${airFx(l.cur).toFixed(2)} = HK$ ${l.hkdPerKg.toFixed(4)}/kg</span></div>`
     ).join('');
-
     $('airDetailRows').innerHTML = `
-        <div class="cost-row bold">Prezzo acquisto (${r.priceCur}) <span>${r.price.toFixed(4)} × ${r.priceFx.toFixed(2)} = HK$ ${r.priceHkdBase.toFixed(2)}</span></div>
-        ${r.markupHkd > 0 ? `<div class="cost-row highlight">+2% concordato (×1.02) <span>+ HK$ ${r.markupHkd.toFixed(2)}</span></div>` : ''}
-        <div class="cost-row bold">→ Prezzo in HKD <span>HK$ ${r.priceHkd.toFixed(2)}</span></div>
+        <div class="cost-row bold">${t('air_row_purchase')} (${r.priceCur}) <span>${r.price.toFixed(4)} × ${r.priceFx.toFixed(2)} = HK$ ${r.priceHkdBase.toFixed(2)}</span></div>
+        ${r.markupHkd > 0 ? `<div class="cost-row highlight">${t('air_row_markup')} <span>+ HK$ ${r.markupHkd.toFixed(2)}</span></div>` : ''}
+        <div class="cost-row bold">${t('air_row_price_hkd')} <span>HK$ ${r.priceHkd.toFixed(2)}</span></div>
         <div class="divider"></div>
-        <div style="font-size:9px;letter-spacing:1px;color:rgba(221,213,200,0.35);margin:2px 0 4px;">NOLO AEREO (tariffe per kg → HKD/kg)</div>
+        <div style="font-size:9px;letter-spacing:1px;color:rgba(221,213,200,0.35);margin:2px 0 4px;">${t('air_freight_hdr')}</div>
         ${legRows}
-        <div class="cost-row bold">Nolo totale <span>HK$ ${r.totalFreightPerKg.toFixed(4)} / kg</span></div>
-        <div class="cost-row">× Peso lordo <span>${r.weight} kg / unità</span></div>
-        <div class="cost-row bold">→ Nolo per unità <span>HK$ ${r.freightPerUom.toFixed(2)}</span></div>
+        <div class="cost-row bold">${t('air_total_freight')} <span>HK$ ${r.totalFreightPerKg.toFixed(4)} / kg</span></div>
+        <div class="cost-row">${t('air_times_weight')} <span>${r.weight} kg / ${t('per_unit')}</span></div>
+        <div class="cost-row bold">${t('air_freight_unit')} <span>HK$ ${r.freightPerUom.toFixed(2)}</span></div>
         <div class="divider"></div>
-        <div class="cost-row bold highlight" style="color:#4A9B9B;">→ Standard Cost (HKD) <span>HK$ ${r.newStdHkd.toFixed(2)}</span></div>
+        <div class="cost-row bold highlight" style="color:#4A9B9B;">${t('air_std_hkd')} <span>HK$ ${r.newStdHkd.toFixed(2)}</span></div>
     `;
-
-    // Prezzi suggeriti per margine target
     $('airSuggested').innerHTML = AIR.MARGINS.map(m =>
-        `<div class="suggest-card"><div class="m">Margine ${(m*100).toFixed(0)}%</div><div class="p">HK$ ${(r.newStdHkd / (1 - m)).toFixed(2)}</div></div>`
+        `<div class="suggest-card"><div class="m">${t('suggest_margin')} ${(m*100).toFixed(0)}%</div><div class="p">HK$ ${(r.newStdHkd / (1 - m)).toFixed(2)}</div></div>`
     ).join('');
-
-    // Reset margine manuale
-    $('airPvp').value = '';
-    $('airMarginPct').textContent = '—';
-    $('airMarginPct').className = 'pct';
-    $('airMarginDetail').textContent = '';
-
+    $('airPvp').value = ''; $('airMarginPct').textContent = '—'; $('airMarginPct').className = 'pct'; $('airMarginDetail').textContent = '';
     $('airResults').style.display = 'block';
 }
 
 function airMargin() {
     const r = state.airResult;
-    const pctEl = $('airMarginPct');
-    const detEl = $('airMarginDetail');
+    const pctEl = $('airMarginPct'), detEl = $('airMarginDetail');
     let raw = $('airPvp').value.replace(/[^0-9,.]/g, '').replace(',', '.');
     const pvp = parseFloat(raw);
-    if (!r || isNaN(pvp) || pvp <= 0) {
-        pctEl.textContent = '—'; pctEl.className = 'pct'; detEl.textContent = '';
-        return;
-    }
+    if (!r || isNaN(pvp) || pvp <= 0) { pctEl.textContent = '—'; pctEl.className = 'pct'; detEl.textContent = ''; return; }
     const margin = ((pvp - r.newStdHkd) / pvp) * 100;
     const abs = pvp - r.newStdHkd;
     pctEl.textContent = margin.toFixed(1) + '%';
     pctEl.className = 'pct ' + (margin >= 0 ? 'positive' : 'negative');
-    detEl.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: HK$ ${abs.toFixed(2)} / unità`;
+    detEl.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + `${t('margin_word')} ${margin >= 0 ? t('margin_pos') : t('margin_neg')}: HK$ ${abs.toFixed(2)} / ${t('per_unit')}`;
     detEl.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
 }
 
-// ─── PVP FORMAT E SINCRONIZZAZIONE ─────────────────────────────
+// ─── PVP SEA ────────────────────────────────────────────────────
 function formatAndSyncPVP(source) {
-    const eurInput = $('pvpEur');
-    const hkdInput = $('pvpHgk');
+    const eurInput = $('pvpEur'), hkdInput = $('pvpHgk');
     const rate = parseFloat($('eurHkdRate').value) || C.EUR_TO_HKD;
     const r = state.lastResult;
-    
     if (source === 'eur') {
-        let rawValue = eurInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
-        if (rawValue === '') {
-            hkdInput.value = '';
-            updateMarginDisplay(null, null);
-            return;
-        }
-        const eur = parseFloat(rawValue);
-        if (!isNaN(eur) && eur > 0) {
-            const hkd = eur * rate;
-            hkdInput.value = formatNumber(hkd);
-            if (r) updateMarginDisplay(eur, r.step2Eur, 'Eur');
-        } else {
-            hkdInput.value = '';
-        }
+        let rv = eurInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+        if (rv === '') { hkdInput.value = ''; updateMarginDisplay(null, null); return; }
+        const eur = parseFloat(rv);
+        if (!isNaN(eur) && eur > 0) { hkdInput.value = formatNumber(eur * rate); if (r) updateMarginDisplay(eur, r.step2Eur, 'Eur'); }
+        else hkdInput.value = '';
     } else {
-        let rawValue = hkdInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
-        if (rawValue === '') {
-            eurInput.value = '';
-            updateMarginDisplay(null, null);
-            return;
-        }
-        const hkd = parseFloat(rawValue);
-        if (!isNaN(hkd) && hkd > 0) {
-            const eur = hkd / rate;
-            eurInput.value = formatNumber(eur);
-            if (r) updateMarginDisplay(hkd, r.step2Hkd, 'Hgk');
-        } else {
-            eurInput.value = '';
-        }
+        let rv = hkdInput.value.replace(/[^0-9,.]/g, '').replace(',', '.');
+        if (rv === '') { eurInput.value = ''; updateMarginDisplay(null, null); return; }
+        const hkd = parseFloat(rv);
+        if (!isNaN(hkd) && hkd > 0) { eurInput.value = formatNumber(hkd / rate); if (r) updateMarginDisplay(hkd, r.step2Hkd, 'Hgk'); }
+        else eurInput.value = '';
     }
 }
 
 function formatNumber(num) {
     if (isNaN(num)) return '';
-    const parts = num.toFixed(2).split('.');
-    const intPart = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.');
-    return intPart + ',' + parts[1];
+    const p = num.toFixed(2).split('.');
+    return p[0].replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + p[1];
 }
 
 function updateMarginDisplay(pvp, cost, suffix) {
     const pctEl = $('margin' + (suffix || 'Eur') + 'Pct');
     const detailEl = $('margin' + (suffix || 'Eur') + 'Detail');
-    
-    if (pvp === null || pvp <= 0 || !cost) {
-        pctEl.textContent = '—';
-        pctEl.className = 'pct';
-        detailEl.textContent = '';
-        return;
-    }
-    
-    const margin = ((pvp - cost) / pvp) * 100;
-    const abs = pvp - cost;
-    const symbol = suffix === 'Eur' || suffix === 'eur' ? '€' : 'HK$';
-    const suffixKey = suffix === 'Eur' || suffix === 'eur' ? 'Eur' : 'Hgk';
-    
+    if (pvp === null || pvp <= 0 || !cost) { pctEl.textContent = '—'; pctEl.className = 'pct'; detailEl.textContent = ''; return; }
+    const margin = ((pvp - cost) / pvp) * 100, abs = pvp - cost;
+    const symbol = (suffix === 'Eur') ? '€' : 'HK$';
+    const suffixKey = (suffix === 'Eur') ? 'Eur' : 'Hgk';
     pctEl.textContent = margin.toFixed(1) + '%';
     pctEl.className = 'pct ' + (margin >= 0 ? 'positive' : 'negative');
-    
-    const detailEl2 = $('margin' + suffixKey + 'Detail');
-    detailEl2.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + 
-        `Margine ${margin >= 0 ? 'positivo' : 'negativo'}: ${symbol} ${abs.toFixed(2)} / unità`;
-    detailEl2.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
-    
+    const d2 = $('margin' + suffixKey + 'Detail');
+    d2.textContent = (margin >= 0 ? '✅ ' : '⚠️ ') + `${t('margin_word')} ${margin >= 0 ? t('margin_pos') : t('margin_neg')}: ${symbol} ${abs.toFixed(2)} / ${t('per_unit')}`;
+    d2.style.color = margin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
     if (suffixKey === 'Eur' && state.lastResult) {
         const hkdPvp = parseFloat($('pvpHgk').value.replace(/[^0-9,.]/g, '').replace(',', '.')) || 0;
         if (hkdPvp > 0) {
             const hkdMargin = ((hkdPvp - state.lastResult.step2Hkd) / hkdPvp) * 100;
-            const hkdPct = $('marginHgkPct');
-            const hkdDetail = $('marginHgkDetail');
+            const hkdPct = $('marginHgkPct'), hkdDetail = $('marginHgkDetail');
             hkdPct.textContent = hkdMargin.toFixed(1) + '%';
             hkdPct.className = 'pct ' + (hkdMargin >= 0 ? 'positive' : 'negative');
             const hkdAbs = hkdPvp - state.lastResult.step2Hkd;
-            hkdDetail.textContent = (hkdMargin >= 0 ? '✅ ' : '⚠️ ') + 
-                `Margine ${hkdMargin >= 0 ? 'positivo' : 'negativo'}: HK$ ${hkdAbs.toFixed(2)} / unità`;
+            hkdDetail.textContent = (hkdMargin >= 0 ? '✅ ' : '⚠️ ') + `${t('margin_word')} ${hkdMargin >= 0 ? t('margin_pos') : t('margin_neg')}: HK$ ${hkdAbs.toFixed(2)} / ${t('per_unit')}`;
             hkdDetail.style.color = hkdMargin >= 0 ? 'rgba(74,155,108,0.7)' : '#B5534A';
         }
     }
 }
 
-// ─── EVENT LISTENERS ───────────────────────────────────────────
+// ─── LISTENERS ──────────────────────────────────────────────────
 document.getElementById('price-fca-input').addEventListener('input', syncPrice);
 document.getElementById('price-dap-input').addEventListener('input', syncPrice);
 document.getElementById('price-mts-input').addEventListener('input', syncPrice);
 
-// ─── INIT ──────────────────────────────────────────────────────
+// ─── INIT ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
+    setLang('it');
     updateUOMFields();
     syncPrice();
     setAirEntity('BV');
