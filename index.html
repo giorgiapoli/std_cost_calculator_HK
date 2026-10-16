@@ -202,12 +202,13 @@
     <div class="grid-2">
         <!-- UOM -->
         <div class="box">
-            <div class="box-title" data-i18n="uom_title">📐 Unità di Misura (UOM)</div>
+            <div class="box-title" data-i18n="uom_title">📐 Unità di Misura di vendita (UOM)</div>
             <div class="btn-group">
                 <button class="btn active" data-uom="PCS" onclick="setUOM('PCS')">🔢 PCS</button>
                 <button class="btn" data-uom="BOX" onclick="setUOM('BOX')">📦 BOX</button>
                 <button class="btn" data-uom="KG" onclick="setUOM('KG')">⚖️ KG</button>
             </div>
+            <div class="hint" data-i18n="uom_note" style="color:#E8C97A;margin-top:8px;">È la UoM di vendita: lo Standard Cost che esce è espresso in questa unità.</div>
             <div class="hint" id="uomHint"></div>
         </div>
 
@@ -584,7 +585,8 @@ const T = {
     mode_sea_sub: "Modello a pallet/container · logica invariata",
     mode_air_title: "✈️ Via Aerea / Local",
     mode_air_sub: "Aereo o locale HK · peso × nolo/kg + prezzo×FX · modello BV",
-    uom_title: "📐 Unità di Misura (UOM)",
+    uom_title: "📐 Unità di Misura di vendita (UOM)",
+    uom_note: "È la UoM di vendita: lo Standard Cost che esce è espresso in questa unità.",
     ubic_title: "🏭 Gestione magazzino (Ubicazione)",
     ubic_mto_title: "🔄 MTO — Cross-docking",
     ubic_mto_sub: "Costo In+Stock+Out per pallet · usa prezzo DAP",
@@ -717,7 +719,8 @@ const T = {
     mode_sea_sub: "Pallet/container model · unchanged logic",
     mode_air_title: "✈️ By Air / Local",
     mode_air_sub: "Air or HK local · weight × freight/kg + price×FX · BV model",
-    uom_title: "📐 Unit of Measure (UOM)",
+    uom_title: "📐 Sales Unit of Measure (UOM)",
+    uom_note: "This is the sales UoM: the resulting Standard Cost is expressed in this unit.",
     ubic_title: "🏭 Warehouse management (Location)",
     ubic_mto_title: "🔄 MTO — Cross-docking",
     ubic_mto_sub: "In+Stock+Out cost per pallet · uses DAP price",
