@@ -356,11 +356,11 @@
             <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
                 <button class="btn-mode active" id="ent-bv" onclick="setAirEntity('BV')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
                     🅱️ BV — non-HOFF
-                    <div class="mode-sub">EU 4€ · dest 6 · acc 6</div>
+                    <div class="mode-sub">EU: main 4 EUR/kg · dest 6 HKD/kg · acc 6 HKD/kg</div>
                 </button>
                 <button class="btn-mode" id="ent-hoff" onclick="setAirEntity('HOFF')">
                     Ⓗ HOFF
-                    <div class="mode-sub">EU 5€ · dest 10 · acc 0</div>
+                    <div class="mode-sub">EU: main 5 EUR/kg · dest 10 HKD/kg · acc 0</div>
                 </button>
             </div>
         </div>
@@ -415,9 +415,10 @@
                     <option value="MANUAL" selected>✏️ Manuale (inserisco io le tariffe)</option>
                 </select>
             </div>
+            <div class="hint" data-i18n="air_legs_hint" style="color:#E8C97A;margin:0 0 10px;">Ogni tariffa è per kg di peso lordo, nella valuta scelta nel menu a fianco (le tratte ③ e ④ partono in HKD, le prime due in EUR). Nel risultato ogni tratta viene convertita in HKD/kg.</div>
             <div class="grid-2">
                 <div class="field">
-                    <label data-i18n-html="air_leg_origin">① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span></label>
+                    <label data-i18n-html="air_leg_origin">① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine · tariffa per kg)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-origin" placeholder="0" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-origin-cur" onchange="onAirChange()">
@@ -426,7 +427,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label data-i18n-html="air_leg_main">② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span></label>
+                    <label data-i18n-html="air_leg_main">② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier · tariffa per kg)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-main" placeholder="es. 4" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-main-cur" onchange="onAirChange()">
@@ -435,7 +436,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label data-i18n-html="air_leg_dest">③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span></label>
+                    <label data-i18n-html="air_leg_dest">③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK · tariffa per kg)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-dest" placeholder="es. 6" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-dest-cur" onchange="onAirChange()">
@@ -444,7 +445,7 @@
                     </div>
                 </div>
                 <div class="field">
-                    <label data-i18n-html="air_leg_acc">④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori)</span></label>
+                    <label data-i18n-html="air_leg_acc">④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori · tariffa per kg)</span></label>
                     <div class="air-leg">
                         <input type="number" class="air-input" id="air-acc" placeholder="es. 6" step="any" oninput="onAirChange()">
                         <select class="air-select" id="air-acc-cur" onchange="onAirChange()">
@@ -633,12 +634,13 @@ const T = {
     air_temp_dry: "🌾 Dry (Secco)", air_temp_fresh: "❄️ Fresh (Fresco)", air_temp_frozen: "🧊 Frozen (Surgelato)",
     air_temp_hint: "Vale sia per aereo che per locale HK (indicativa). Le tariffe nolo si inseriscono qui sotto per tratta.",
     air_freight_title: "🚚 Nolo aereo — 4 tratte (tariffa per kg + valuta)",
+    air_legs_hint: "Ogni tariffa è per kg di peso lordo, nella valuta scelta nel menu a fianco (le tratte ③ e ④ partono in HKD, le prime due in EUR). Nel risultato ogni tratta viene convertita in HKD/kg.",
     air_preset_label: '⚡ Preset nolo consigliati <span style="font-size:9px;color:rgba(221,213,200,0.35);">valori tipici per l\'entità selezionata — modificabili, verifica col fornitore</span>',
     preset_manual: "✏️ Manuale (inserisco io le tariffe)",
-    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine)</span>',
-    air_leg_main: '② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span>',
-    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span>',
-    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori)</span>',
+    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(ritiro origine · tariffa per kg)</span>',
+    air_leg_main: '② Main Freight — aereo <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier · tariffa per kg)</span>',
+    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK · tariffa per kg)</span>',
+    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessori · tariffa per kg)</span>',
     air_fx_title: '💱 Tassi di cambio → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(foglio 03_FX_Rates · modificabili)</span>',
     air_fx_hint: "HKD = 1 (valuta base). Aggiorna i tassi se il modello FX cambia.",
     btn_complete: "Completa i campi per calcolare",
@@ -706,11 +708,11 @@ const T = {
     suggest_margin: "Margine",
     margin_pos: "positivo", margin_neg: "negativo", margin_word: "Margine",
     per_unit: "{u}",
-    preset_bv_eu: "🇪🇺 EU Aereo — 4€ + dest 6 + acc 6 HKD (≈ 47,96/kg)",
-    preset_bv_au: "🇦🇺 Australia Aereo — 1,8 AUD + dest 6 + acc 6 (≈ 21,8/kg)",
-    preset_local: "🏠 Locale HK — nessun nolo (tutto 0)",
-    preset_hoff_eu: "🇪🇺 EU Aereo — 5€ + dest 10 + acc 0 (≈ 54,95/kg)",
-    preset_hoff_au: "🇦🇺 Australia Aereo — 0,15+1,6 AUD + dest 2,6 (≈ 12,1/kg)",
+    preset_bv_eu: "🇪🇺 EU Aereo — main 4 EUR/kg + dest 6 HKD/kg + acc 6 HKD/kg (≈ 47,96 HKD/kg totali)",
+    preset_bv_au: "🇦🇺 Australia Aereo — main 1,8 AUD/kg + dest 6 HKD/kg + acc 6 HKD/kg (≈ 21,8 HKD/kg totali)",
+    preset_local: "🏠 Locale HK — nessun nolo (tutte le tratte a 0)",
+    preset_hoff_eu: "🇪🇺 EU Aereo — main 5 EUR/kg + dest 10 HKD/kg + acc 0 (≈ 54,95 HKD/kg totali)",
+    preset_hoff_au: "🇦🇺 Australia Aereo — origin 0,15 AUD/kg + main 1,6 AUD/kg + dest 2,6 HKD/kg (≈ 12,1 HKD/kg totali)",
   },
   en: {
     model_label: "Model 04/2026",
@@ -765,12 +767,13 @@ const T = {
     air_temp_dry: "🌾 Dry", air_temp_fresh: "❄️ Fresh", air_temp_frozen: "🧊 Frozen",
     air_temp_hint: "Applies to both air and HK local (indicative). Enter freight rates per leg below.",
     air_freight_title: "🚚 Air freight — 4 legs (rate per kg + currency)",
+    air_legs_hint: "Every rate is per kg of gross weight, in the currency chosen in the menu beside it (legs ③ and ④ start in HKD, the first two in EUR). In the result each leg is converted into HKD/kg.",
     air_preset_label: '⚡ Recommended freight presets <span style="font-size:9px;color:rgba(221,213,200,0.35);">typical values for the selected entity — editable, verify with the supplier</span>',
     preset_manual: "✏️ Manual (I enter the rates)",
-    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(origin pickup)</span>',
-    air_leg_main: '② Main Freight — air <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier)</span>',
-    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK)</span>',
-    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessories)</span>',
+    air_leg_origin: '① Origin Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(origin pickup · rate per kg)</span>',
+    air_leg_main: '② Main Freight — air <span style="font-size:9px;color:rgba(221,213,200,0.35);">(carrier · rate per kg)</span>',
+    air_leg_dest: '③ Destination Land Freight <span style="font-size:9px;color:rgba(221,213,200,0.35);">(HK · rate per kg)</span>',
+    air_leg_acc: '④ Other Accessory Cost <span style="font-size:9px;color:rgba(221,213,200,0.35);">(accessories · rate per kg)</span>',
     air_fx_title: '💱 Exchange rates → HKD <span style="font-size:9px;color:rgba(221,213,200,0.35);letter-spacing:0;text-transform:none;margin-left:6px;">(sheet 03_FX_Rates · editable)</span>',
     air_fx_hint: "HKD = 1 (base currency). Update the rates if the FX model changes.",
     btn_complete: "Complete the fields to calculate",
@@ -838,11 +841,11 @@ const T = {
     suggest_margin: "Margin",
     margin_pos: "positive", margin_neg: "negative", margin_word: "Margin",
     per_unit: "{u}",
-    preset_bv_eu: "🇪🇺 EU Air — 4€ + dest 6 + acc 6 HKD (≈ 47.96/kg)",
-    preset_bv_au: "🇦🇺 Australia Air — 1.8 AUD + dest 6 + acc 6 (≈ 21.8/kg)",
-    preset_local: "🏠 HK Local — no freight (all 0)",
-    preset_hoff_eu: "🇪🇺 EU Air — 5€ + dest 10 + acc 0 (≈ 54.95/kg)",
-    preset_hoff_au: "🇦🇺 Australia Air — 0.15+1.6 AUD + dest 2.6 (≈ 12.1/kg)",
+    preset_bv_eu: "🇪🇺 EU Air — main 4 EUR/kg + dest 6 HKD/kg + acc 6 HKD/kg (≈ 47.96 HKD/kg total)",
+    preset_bv_au: "🇦🇺 Australia Air — main 1.8 AUD/kg + dest 6 HKD/kg + acc 6 HKD/kg (≈ 21.8 HKD/kg total)",
+    preset_local: "🏠 HK Local — no freight (all legs 0)",
+    preset_hoff_eu: "🇪🇺 EU Air — main 5 EUR/kg + dest 10 HKD/kg + acc 0 (≈ 54.95 HKD/kg total)",
+    preset_hoff_au: "🇦🇺 Australia Air — origin 0.15 AUD/kg + main 1.6 AUD/kg + dest 2.6 HKD/kg (≈ 12.1 HKD/kg total)",
   }
 };
 function uomWord() {
