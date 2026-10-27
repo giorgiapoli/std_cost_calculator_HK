@@ -216,7 +216,7 @@
         <div class="box">
             <div class="box-title" data-i18n="ubic_title">🏭 Gestione magazzino (Ubicazione)</div>
             <div style="display:flex;flex-direction:column;gap:7px;">
-                <button class="btn-ubic active" data-ubic="MTO" onclick="setUbic('MTO')" style="border-color:#4A8C9B;background:rgba(74,140,155,0.15);color:#EEE;">
+                <button class="btn-ubic" data-ubic="MTO" onclick="setUbic('MTO')">
                     <span data-i18n="ubic_mto_title">🔄 MTO — Cross-docking</span>
                     <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_mto_sub">Costo In+Stock+Out per pallet · usa prezzo DAP</div>
                 </button>
@@ -226,7 +226,7 @@
                 </button>
                 <button class="btn-ubic" data-ubic="MTS" onclick="setUbic('MTS')">
                     <span data-i18n="ubic_mts_title">🏭 MTS — Magazzino Unifreddo</span>
-                    <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_mts_sub">Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)</div>
+                    <div style="font-size:10px;color:rgba(221,213,200,0.45);" data-i18n="ubic_mts_sub">Deposito + Inbound + Picking · usa prezzo MTS (se non esiste, DAP)</div>
                 </button>
             </div>
         </div>
@@ -237,15 +237,7 @@
         <div class="box">
             <div class="box-title" data-i18n="price_pack_title">📦 Prezzo & Contenenza</div>
 
-            <div class="field" id="active-price-field">
-                <label id="priceLabel"></label>
-                <div class="price-display" id="priceDisplay">
-                    <span class="price-display-empty" id="priceDisplayEmpty"></span>
-                </div>
-                <div class="price-hint" id="priceHint"></div>
-            </div>
-
-            <div class="field" id="priceUomField" style="margin-top:10px;">
+            <div class="field" id="priceUomField">
                 <label data-i18n="lbl_price_uom">📏 Il prezzo di acquisto si riferisce a:</label>
                 <div class="btn-group" id="price-uom-btns">
                     <button class="btn active" data-puom="PCS" onclick="setPriceUom('PCS')">🔢 PCS</button>
@@ -255,19 +247,17 @@
                 <div class="hint" id="priceUomHint"></div>
             </div>
 
-            <div class="price-fields-group" id="price-fields-group">
-                <div class="price-field" id="price-fca">
-                    <label data-i18n-html="lbl_fca">FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span></label>
-                    <div class="input-uom"><input type="number" id="price-fca-input" placeholder="es. 2.30" step="any" oninput="syncPrice()"><span class="uom-badge"></span></div>
+            <!-- un solo campo prezzo: attivo solo dopo aver scelto MTO / FOR / MTS -->
+            <div class="price-fields-group" id="price-field" style="margin-top:10px;">
+                <div class="price-field active-price" id="price-field-box">
+                    <label id="priceLabel"></label>
+                    <div class="input-uom"><input type="number" id="price-input" placeholder="es. 2.50" step="any" oninput="onPriceInput()" disabled><span class="uom-badge"></span></div>
+                    <div class="hint" id="priceHint" style="margin-top:6px;"></div>
                 </div>
-                <div class="price-field active-price" id="price-dap">
-                    <label data-i18n-html="lbl_dap">DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span></label>
-                    <div class="input-uom"><input type="number" id="price-dap-input" placeholder="es. 2.50" step="any" oninput="syncPrice()"><span class="uom-badge"></span></div>
-                </div>
-                <div class="price-field" id="price-mts">
-                    <label data-i18n-html="lbl_mts">MTS <span style="font-size:9px;color:rgba(221,213,200,0.3);">(magazzino)</span></label>
-                    <div class="input-uom"><input type="number" id="price-mts-input" placeholder="es. 2.70" step="any" oninput="syncPrice()"><span class="uom-badge"></span></div>
-                </div>
+            </div>
+            <!-- memoria dei tre prezzi (FCA / DAP / MTS): non visibili, conta solo quello della gestione scelta -->
+            <div style="display:none;">
+                <input type="number" id="price-fca-input"><input type="number" id="price-dap-input"><input type="number" id="price-mts-input">
             </div>
 
             <div class="conv-panel hidden" id="convPanel">
@@ -594,7 +584,7 @@ const T = {
     ubic_for_title: "🚛 FOR — Franco fornitore",
     ubic_for_sub: "Nessun costo handling aggiunto · usa prezzo FCA",
     ubic_mts_title: "🏭 MTS — Magazzino Unifreddo",
-    ubic_mts_sub: "Deposito + Inbound + Picking · usa prezzo MTS (o DAP se 0)",
+    ubic_mts_sub: "Deposito + Inbound + Picking · usa prezzo MTS (se non esiste, DAP)",
     price_pack_title: "📦 Prezzo & Contenenza",
     lbl_fca: 'FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span>',
     lbl_dap: 'DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS se MTS=0)</span>',
@@ -670,6 +660,11 @@ const T = {
     hint_uom_kg: "Inserisci il peso totale del pallet in Kg.",
     unit_PCS: "PEZZO", unit_BOX: "CARTONE/BOX", unit_KG: "KG",
     purchase_price_per: "Prezzo acquisto per", source: "Fonte",
+    price_word: "Prezzo acquisto", per_word: "per",
+    price_choose_first: "⛔ Seleziona prima la gestione del magazzino (MTO / FOR / MTS): poi comparirà il campo prezzo corretto.",
+    price_hint_MTO: "Prezzo DAP in €. Se il fornitore è IFB, inserisci il prezzo comprensivo di IC.",
+    price_hint_FOR: "Prezzo FCA in €. Se il fornitore è IFB, inserisci il prezzo comprensivo di IC.",
+    price_hint_MTS: "Prezzo MTS in €. Se il fornitore è IFB, comprensivo di IC. Se non esiste un prezzo MTS, inserisci il DAP.",
     price_empty: "— Inserisci un prezzo qui sotto —",
     price_hint_default: "Inserisci il prezzo in uno dei campi sottostanti",
     qty_label: "Pezzi per cartone",
@@ -729,7 +724,7 @@ const T = {
     ubic_for_title: "🚛 FOR — Free Carrier",
     ubic_for_sub: "No handling cost added · uses FCA price",
     ubic_mts_title: "🏭 MTS — Unifreddo Warehouse",
-    ubic_mts_sub: "Storage + Inbound + Picking · uses MTS price (or DAP if 0)",
+    ubic_mts_sub: "Storage + Inbound + Picking · uses MTS price (if none, DAP)",
     price_pack_title: "📦 Price & Packaging",
     lbl_fca: 'FCA <span style="font-size:9px;color:rgba(221,213,200,0.3);">(FOR)</span>',
     lbl_dap: 'DAP <span style="font-size:9px;color:rgba(221,213,200,0.3);">(MTO / MTS if MTS=0)</span>',
@@ -803,6 +798,11 @@ const T = {
     hint_uom_kg: "Enter the total pallet weight in Kg.",
     unit_PCS: "PIECE", unit_BOX: "BOX", unit_KG: "KG",
     purchase_price_per: "Purchase price per", source: "Source",
+    price_word: "Purchase price", per_word: "per",
+    price_choose_first: "⛔ First select the warehouse handling (MTO / FOR / MTS): the correct price field will then be enabled.",
+    price_hint_MTO: "DAP price in €. If the supplier is IFB, enter the price including IC.",
+    price_hint_FOR: "FCA price in €. If the supplier is IFB, enter the price including IC.",
+    price_hint_MTS: "MTS price in €. If the supplier is IFB, including IC. If there is no MTS price, enter the DAP.",
     price_empty: "— Enter a price below —",
     price_hint_default: "Enter the price in one of the fields below",
     qty_label: "Pieces per box",
@@ -864,7 +864,7 @@ const state = {
     uom: 'PCS',
     priceUom: 'PCS',          // UoM a cui si riferisce il prezzo di acquisto
     priceUomManual: false,    // false = segue l'UoM di vendita
-    ubicazione: 'MTO',
+    ubicazione: null,         // nessuna preselezione: la gestione va scelta prima di inserire il prezzo
     temperature: 'DRY',
     area: 'NORD',
     hasCert: false,
@@ -966,19 +966,20 @@ function applyLang() {
 
 // ─── PREZZO ─────────────────────────────────────────────────────
 // prezzo letto dai campi, nell'UoM a cui si riferisce (senza conversione)
+const PRICE_STORE = { FOR: 'price-fca-input', MTO: 'price-dap-input', MTS: 'price-mts-input' };
+const PRICE_SRC = { FOR: 'FCA', MTO: 'DAP', MTS: 'MTS' };
+
 function readRawPrice() {
     const ubic = state.ubicazione;
-    const fca = parseFloat($('price-fca-input').value) || 0;
-    const dap = parseFloat($('price-dap-input').value) || 0;
-    const mts = parseFloat($('price-mts-input').value) || 0;
-    let price = 0, source = '';
-    if (ubic === 'FOR') { price = fca; source = 'FCA'; }
-    else if (ubic === 'MTO') { price = dap; source = 'DAP'; }
-    else if (ubic === 'MTS') {
-        if (mts > 0) { price = mts; source = 'MTS'; }
-        else { price = dap; source = 'DAP (MTS=0)'; }
-    }
-    return { price, source };
+    if (!ubic) return { price: 0, source: '' };
+    return { price: parseFloat($(PRICE_STORE[ubic]).value) || 0, source: PRICE_SRC[ubic] };
+}
+
+// il campo visibile scrive nella memoria del prezzo della gestione scelta
+function onPriceInput() {
+    const ubic = state.ubicazione; if (!ubic) return;
+    $(PRICE_STORE[ubic]).value = $('price-input').value;
+    syncPrice();
 }
 
 // ─── UoM DEL PREZZO DI ACQUISTO (con conversione) ───────────────
@@ -1036,24 +1037,17 @@ function refreshPriceUom() {
 
 function syncPrice() {
     refreshPriceUom();
-    const display = $('priceDisplay'), hint = $('priceHint'), priceLabel = $('priceLabel');
-    const result = getActivePrice();
-    const unitLabel = t('unit_' + result.from);
-    if (result.raw > 0) {
-        display.innerHTML = `€ ${result.raw.toFixed(4)} <span style="font-size:11px;font-weight:normal;opacity:.8;">/ ${t('unit_per_' + result.from)}</span>` +
-            (result.from !== result.to && result.convOk ? `<div style="font-size:12px;font-weight:normal;margin-top:3px;color:#4A9B9B;">→ € ${result.price.toFixed(4)} / ${t('unit_per_' + result.to)}</div>` : '');
-        display.style.fontSize = '18px'; display.style.fontWeight = 'bold'; display.style.color = '#E8C97A';
-        hint.textContent = `✅ ${t('source')}: ${result.source}`; hint.style.color = 'rgba(196,135,59,0.7)';
-        priceLabel.textContent = `${t('purchase_price_per')} ${unitLabel} (€) — ${t('source')}: ${result.source}`;
+    const ubic = state.ubicazione, c = convState();
+    const input = $('price-input'), hint = $('priceHint'), label = $('priceLabel');
+    if (!ubic) {
+        input.disabled = true; input.value = '';
+        label.textContent = t('price_word');
+        hint.textContent = t('price_choose_first'); hint.style.color = '#E8C97A';
     } else {
-        display.innerHTML = `<span class="price-display-empty">${t('price_empty')}</span>`;
-        display.style.fontSize = '14px'; display.style.fontWeight = 'normal'; display.style.color = 'rgba(221,213,200,0.3)';
-        hint.textContent = t('price_hint_default'); hint.style.color = 'rgba(221,213,200,0.35)';
-        priceLabel.textContent = `${t('purchase_price_per')} ${unitLabel} (€)`;
+        input.disabled = false;
+        label.textContent = `${t('price_word')} ${PRICE_SRC[ubic]} ${t('per_word')} ${t('unit_' + c.from)} (€)`;
+        hint.textContent = t('price_hint_' + ubic); hint.style.color = '';
     }
-    document.querySelectorAll('.price-field').forEach(el => el.classList.remove('active-price'));
-    const priceMap = { 'FOR': 'price-fca', 'MTO': 'price-dap', 'MTS': 'price-mts' };
-    const activeEl = $(priceMap[state.ubicazione]); if (activeEl) activeEl.classList.add('active-price');
     clearResults(); checkCanCalc();
 }
 
@@ -1195,7 +1189,10 @@ function setUbic(ubic) {
         if (isActive) { el.style.borderColor = colors[ubic]; el.style.background = colors[ubic] + '22'; el.style.color = '#EEE'; }
         else { el.style.borderColor = 'rgba(255,255,255,0.09)'; el.style.background = 'rgba(255,255,255,0.04)'; el.style.color = 'rgba(221,213,200,0.6)'; }
     });
+    // mostra nel campo il prezzo memorizzato per questa gestione (vuoto se non ancora inserito)
+    const inp = $('price-input'); inp.value = $(PRICE_STORE[ubic]).value;
     syncPrice(); clearResults();
+    if (!inp.value) inp.focus();
 }
 
 function setTemp(temp) {
@@ -1482,9 +1479,6 @@ function updateMarginDisplay(pvp, cost, suffix) {
 }
 
 // ─── LISTENERS ──────────────────────────────────────────────────
-document.getElementById('price-fca-input').addEventListener('input', syncPrice);
-document.getElementById('price-dap-input').addEventListener('input', syncPrice);
-document.getElementById('price-mts-input').addEventListener('input', syncPrice);
 
 // ─── INIT ───────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', function() {
